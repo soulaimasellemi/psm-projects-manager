@@ -1,0 +1,102 @@
+<div class="auth-page">
+  <div class="auth-header">
+    <div class="container text-center text-white">
+      <span class="brand-logo brand-logo-lg mb-3"><i class="fas fa-layer-group"></i></span>
+      <h1 class="display-6 fw-bold">Rejoignez l'équipe SmartSoft</h1>
+      <p class="lead text-white-50 mb-0">Créez votre compte collaborateur. L'administrateur sera notifié par email pour le valider.</p>
+    </div>
+    <div class="auth-separator">
+      <svg viewBox="0 0 2560 100" preserveAspectRatio="none"><polygon points="2560 0 2560 100 0 100"></polygon></svg>
+    </div>
+  </div>
+
+  <div class="container auth-body">
+    <div class="row justify-content-center">
+      <div class="col-lg-6 col-md-8">
+        <div class="card auth-card">
+          @if (success()) {
+            <div class="card-body text-center px-lg-5 py-5">
+              <div class="icon-shape icon-shape-lg bg-gradient-success text-white mx-auto mb-4">
+                <i class="fas fa-paper-plane"></i>
+              </div>
+              <h4 class="text-dark">Demande envoyée !</h4>
+              <p class="text-muted">{{ success() }}</p>
+              <a routerLink="/login" class="btn btn-primary mt-2"><i class="fas fa-arrow-left me-2"></i>Retour à la connexion</a>
+            </div>
+          } @else {
+            <div class="card-header bg-transparent text-center py-4">
+              <h5 class="mb-0 text-dark">Créer un compte</h5>
+            </div>
+            <div class="card-body px-lg-5 py-4">
+              @if (error()) {
+                <div class="alert alert-danger d-flex align-items-center gap-2 py-2">
+                  <i class="fas fa-circle-exclamation"></i><span>{{ error() }}</span>
+                </div>
+              }
+              <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+                <div class="row g-3">
+                  <div class="col-sm-6">
+                    <div class="input-group input-group-alternative" [class.is-invalid-group]="invalid('prenom')">
+                      <span class="input-group-text"><i class="fas fa-user"></i></span>
+                      <input class="form-control" placeholder="Prénom" formControlName="prenom">
+                    </div>
+                    @if (invalid('prenom')) { <small class="text-danger">Prénom obligatoire.</small> }
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="input-group input-group-alternative" [class.is-invalid-group]="invalid('nom')">
+                      <span class="input-group-text"><i class="fas fa-user"></i></span>
+                      <input class="form-control" placeholder="Nom" formControlName="nom">
+                    </div>
+                    @if (invalid('nom')) { <small class="text-danger">Nom obligatoire.</small> }
+                  </div>
+                  <div class="col-12">
+                    <div class="input-group input-group-alternative" [class.is-invalid-group]="invalid('email')">
+                      <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                      <input class="form-control" type="email" placeholder="Email professionnel" formControlName="email" autocomplete="email">
+                    </div>
+                    @if (invalid('email')) { <small class="text-danger">Email invalide.</small> }
+                  </div>
+                  <div class="col-12">
+                    <div class="input-group input-group-alternative" [class.is-invalid-group]="invalid('tel')">
+                      <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                      <input class="form-control" placeholder="Téléphone (ex. +216 98 123 456)" formControlName="tel">
+                    </div>
+                    @if (invalid('tel')) { <small class="text-danger">Numéro invalide.</small> }
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="input-group input-group-alternative" [class.is-invalid-group]="invalid('password')">
+                      <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                      <input class="form-control" type="password" placeholder="Mot de passe" formControlName="password" autocomplete="new-password">
+                    </div>
+                    @if (invalid('password')) { <small class="text-danger">6 caractères minimum.</small> }
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="input-group input-group-alternative"
+                         [class.is-invalid-group]="submitted() && (form.controls.confirm.invalid || form.hasError('mismatch'))">
+                      <span class="input-group-text"><i class="fas fa-lock"></i></span>
+                      <input class="form-control" type="password" placeholder="Confirmation" formControlName="confirm" autocomplete="new-password">
+                    </div>
+                    @if (submitted() && form.hasError('mismatch')) {
+                      <small class="text-danger">Les mots de passe ne correspondent pas.</small>
+                    }
+                  </div>
+                </div>
+                <div class="alert alert-secondary-soft small mt-4 mb-0">
+                  <i class="fas fa-circle-info me-1"></i>
+                  Votre compte aura le rôle <strong>Collaborateur</strong> et sera actif après validation par l'administrateur.
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mt-4" [disabled]="loading()">
+                  @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                  Créer mon compte
+                </button>
+              </form>
+            </div>
+          }
+        </div>
+        <div class="text-center mt-3">
+          <a routerLink="/login" class="text-light"><small>Déjà inscrit ? <strong>Se connecter</strong></small></a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

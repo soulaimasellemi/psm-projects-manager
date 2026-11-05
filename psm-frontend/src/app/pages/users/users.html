@@ -1,0 +1,132 @@
+<div class="card mb-4">
+  <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+    <div>
+      <h5 class="mb-0">Utilisateurs</h5>
+      <small class="text-muted">Validez les inscriptions et gérez les rôles</small>
+    </div>
+    <div class="ms-auto d-flex flex-wrap gap-2 align-items-center">
+      <div class="btn-group" role="group">
+        <button type="button" class="btn btn-sm" [class.btn-primary]="filtre() === 'tous'" [class.btn-light]="filtre() !== 'tous'" (click)="setFiltre('tous')">Tous</button>
+        <button type="button" class="btn btn-sm" [class.btn-warning]="filtre() === 'attente'" [class.btn-light]="filtre() !== 'attente'" (click)="setFiltre('attente')">
+          <i class="fas fa-user-clock me-1"></i>En attente
+        </button>
+        <button type="button" class="btn btn-sm" [class.btn-success]="filtre() === 'actifs'" [class.btn-light]="filtre() !== 'actifs'" (click)="setFiltre('actifs')">Actifs</button>
+      </div>
+      <div class="input-group input-group-alternative search-box">
+        <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
+        <input class="form-control" placeholder="Nom ou email…" (input)="onSearch($any($event.target).value)">
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-items-center table-flush table-hover mb-0">
+      <thead class="thead-light">
+        <tr>
+          <th>Utilisateur</th>
+          <th>Téléphone</th>
+          <th>Rôles</th>
+          <th>Statut</th>
+          <th>Inscrit le</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading() && !data()) {
+          <tr><td colspan="6" class="text-center py-5"><span class="spinner-border text-primary"></span></td></tr>
+        }
+        @for (u of data()?.content ?? []; track u.id) {
+          <tr [class.row-pending]="!u.enabled">
+            <td>
+              <div class="d-flex align-items-center">
+                <span class="avatar me-3" [class.bg-gradient-danger]="u.roles.includes('ADMIN')" [class.bg-gradient-info]="!u.roles.includes('ADMIN')">
+                  {{ initiales(u.prenom + ' ' + u.nom) }}
+                </span>
+                <div>
+                  <div class="fw-semibold text-dark">{{ u.prenom }} {{ u.nom }} @if (isMe(u)) { <span class="badge bg-light text-primary ms-1">Vous</span> }</div>
+                  <small class="text-muted">{{ u.email }}</small>
+                </div>
+              </div>
+            </td>
+            <td class="small">{{ u.tel || '—' }}</td>
+            <td>
+              @for (r of u.roles; track r) {
+                <span class="badge me-1" [class.badge-soft-danger]="r === 'ADMIN'" [class.badge-soft-info]="r !== 'ADMIN'">
+                  {{ r === 'ADMIN' ? 'Admin' : 'Collaborateur' }}
+                </span>
+              }
+            </td>
+            <td>
+              @if (u.enabled) {
+                <span class="badge-dot"><i class="bg-success"></i>Actif</span>
+              } @else {
+                <span class="badge-dot"><i class="bg-warning"></i>En attente</span>
+              }
+            </td>
+            <td class="small">{{ u.dateCreation | date: 'dd/MM/yyyy' }}</td>
+            <td class="text-end text-nowrap">
+              @if (!isMe(u)) {
+                @if (u.enabled) {
+                  <button class="btn btn-sm btn-soft-warning" type="button" (click)="toggleStatut(u)">
+                    <i class="fas fa-user-slash me-1"></i>Désactiver
+                  </button>
+                } @else {
+                  <button class="btn btn-sm btn-success" type="button" (click)="toggleStatut(u)">
+                    <i class="fas fa-user-check me-1"></i>Valider
+                  </button>
+                }
+                <button class="btn btn-icon btn-soft-primary" type="button" (click)="openRoles(u)" title="Rôles">
+                  <i class="fas fa-user-tag"></i>
+                </button>
+                <button class="btn btn-icon btn-soft-danger" type="button" (click)="remove(u)" title="Supprimer">
+                  <i class="fas fa-trash"></i>
+                </button>
+              } @else {
+                <span class="text-muted small">—</span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          @if (!loading()) {
+            <tr><td colspan="6" class="text-center text-muted py-5">Aucun utilisateur trouvé.</td></tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (data(); as d) {
+    <app-pagination [page]="d.page" [size]="d.size" [totalPages]="d.totalPages" [totalElements]="d.totalElements"
+                    label="utilisateurs" (pageChange)="goTo($event)" />
+  }
+</div>
+
+<!-- ===== Modal rôles ===== -->
+@if (rolesUser(); as u) {
+  <div class="psm-modal-backdrop" (click)="rolesUser.set(null)">
+    <div class="psm-modal psm-modal-sm" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div class="psm-modal-header">
+        <h5 class="mb-0"><i class="fas fa-user-tag me-2 text-primary"></i>Rôles de {{ u.prenom }}</h5>
+        <button type="button" class="btn-close" (click)="rolesUser.set(null)" aria-label="Fermer"></button>
+      </div>
+      <div class="psm-modal-body">
+        @for (r of allRoles; track r) {
+          <label class="role-option" [class.selected]="rolesSelection().includes(r)">
+            <input type="checkbox" class="form-check-input me-3" [checked]="rolesSelection().includes(r)" (change)="toggleRole(r)">
+            <span>
+              <strong>{{ r === 'ADMIN' ? 'Administrateur' : 'Collaborateur' }}</strong><br>
+              <small class="text-muted">{{ r === 'ADMIN' ? 'CRUD complet + gestion des utilisateurs' : 'Consulter et ajouter clients / projets' }}</small>
+            </span>
+          </label>
+        }
+        @if (rolesSelection().length === 0) {
+          <small class="text-danger">Sélectionnez au moins un rôle.</small>
+        }
+      </div>
+      <div class="psm-modal-footer">
+        <button type="button" class="btn btn-light" (click)="rolesUser.set(null)">Annuler</button>
+        <button type="button" class="btn btn-primary" [disabled]="rolesSelection().length === 0" (click)="saveRoles()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+}

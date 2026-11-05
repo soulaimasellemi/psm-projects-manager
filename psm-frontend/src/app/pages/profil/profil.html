@@ -1,0 +1,102 @@
+<div class="row g-4">
+  <!-- Carte profil -->
+  <div class="col-xl-4">
+    <div class="card card-profile">
+      <div class="card-profile-cover"></div>
+      <div class="text-center">
+        <span class="avatar avatar-xl bg-gradient-primary card-profile-avatar">{{ initiales() }}</span>
+      </div>
+      <div class="card-body pt-0 text-center">
+        <h4 class="mb-1 text-dark">{{ me()?.prenom }} {{ me()?.nom }}</h4>
+        <div class="text-muted mb-3">{{ me()?.email }}</div>
+        @for (r of me()?.roles ?? []; track r) {
+          <span class="badge me-1" [class.badge-soft-danger]="r === 'ADMIN'" [class.badge-soft-info]="r !== 'ADMIN'">
+            {{ r === 'ADMIN' ? 'Administrateur' : 'Collaborateur' }}
+          </span>
+        }
+        <hr class="my-4">
+        <div class="d-flex justify-content-around text-center">
+          <div>
+            <div class="fw-bold text-dark"><i class="fas fa-phone text-primary"></i></div>
+            <small class="text-muted">{{ me()?.tel || 'Non renseigné' }}</small>
+          </div>
+          <div>
+            <div class="fw-bold text-dark"><i class="fas fa-calendar text-primary"></i></div>
+            <small class="text-muted">Membre depuis {{ me()?.dateCreation | date: 'MMMM yyyy' }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-xl-8">
+    <!-- Informations -->
+    <div class="card mb-4">
+      <div class="card-header"><h5 class="mb-0">Mes informations</h5></div>
+      <form [formGroup]="infoForm" (ngSubmit)="saveInfo()" novalidate>
+        <div class="card-body">
+          <h6 class="heading-small">Informations personnelles</h6>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Prénom</label>
+              <input class="form-control" formControlName="prenom" [class.is-invalid]="infoForm.controls.prenom.invalid">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nom</label>
+              <input class="form-control" formControlName="nom" [class.is-invalid]="infoForm.controls.nom.invalid">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Email</label>
+              <input class="form-control" [value]="me()?.email ?? ''" disabled>
+              <small class="text-muted">L'email sert d'identifiant et ne peut pas être modifié.</small>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Téléphone</label>
+              <input class="form-control" formControlName="tel" placeholder="+216 …">
+            </div>
+          </div>
+        </div>
+        <div class="card-footer text-end">
+          <button type="submit" class="btn btn-primary" [disabled]="infoForm.invalid || savingInfo()">
+            @if (savingInfo()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Mot de passe -->
+    <div class="card">
+      <div class="card-header"><h5 class="mb-0">Changer le mot de passe</h5></div>
+      <form [formGroup]="pwdForm" (ngSubmit)="savePassword()" novalidate>
+        <div class="card-body">
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label">Mot de passe actuel</label>
+              <input class="form-control" type="password" formControlName="ancien" autocomplete="current-password"
+                     [class.is-invalid]="pwdSubmitted() && pwdForm.controls.ancien.invalid">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Nouveau mot de passe</label>
+              <input class="form-control" type="password" formControlName="nouveau" autocomplete="new-password"
+                     [class.is-invalid]="pwdSubmitted() && pwdForm.controls.nouveau.invalid">
+              <div class="invalid-feedback">6 caractères minimum.</div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Confirmation</label>
+              <input class="form-control" type="password" formControlName="confirm" autocomplete="new-password"
+                     [class.is-invalid]="pwdSubmitted() && (pwdForm.controls.confirm.invalid || pwdForm.hasError('mismatch'))">
+              <div class="invalid-feedback">Les mots de passe ne correspondent pas.</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer text-end">
+          <button type="submit" class="btn btn-dark" [disabled]="savingPwd()">
+            @if (savingPwd()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            <i class="fas fa-key me-1"></i> Mettre à jour
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

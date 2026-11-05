@@ -1,0 +1,150 @@
+<div class="card mb-4">
+  <!-- En-tête : titre, recherche, ajout -->
+  <div class="card-header d-flex flex-wrap gap-3 align-items-center">
+    <div>
+      <h5 class="mb-0">Liste des clients</h5>
+      <small class="text-muted">{{ data()?.totalElements ?? 0 }} client(s) enregistré(s)</small>
+    </div>
+    <div class="ms-auto d-flex flex-wrap gap-2">
+      <div class="input-group input-group-alternative search-box">
+        <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
+        <input class="form-control" placeholder="Nom, email, secteur, ville…" (input)="onSearch($any($event.target).value)">
+      </div>
+      <!-- Admin ET collaborateur peuvent ajouter -->
+      <button class="btn btn-primary" type="button" (click)="openCreate()">
+        <i class="fas fa-plus me-1"></i> Nouveau client
+      </button>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-items-center table-flush table-hover mb-0">
+      <thead class="thead-light">
+        <tr>
+          <th>Client</th>
+          <th>Contact</th>
+          <th>Adresse</th>
+          <th class="text-center">Projets</th>
+          <th>Budget total</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading() && !data()) {
+          <tr><td colspan="6" class="text-center py-5"><span class="spinner-border text-primary"></span></td></tr>
+        }
+        @for (c of data()?.content ?? []; track c.id) {
+          <tr>
+            <td>
+              <div class="d-flex align-items-center">
+                <span class="avatar bg-gradient-primary me-3">{{ initiales(c.nom) }}</span>
+                <div>
+                  <div class="fw-semibold text-dark">{{ c.nom }}</div>
+                  @if (c.secteur) { <span class="badge badge-soft-primary">{{ c.secteur }}</span> }
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="small">
+                @if (c.email) { <div><i class="fas fa-envelope text-muted me-2"></i>{{ c.email }}</div> }
+                @if (c.tel) { <div><i class="fas fa-phone text-muted me-2"></i>{{ c.tel }}</div> }
+                @if (!c.email && !c.tel) { <span class="text-muted">—</span> }
+              </div>
+            </td>
+            <td class="small text-wrap" style="max-width: 220px">{{ c.adresse || '—' }}</td>
+            <td class="text-center">
+              <a [routerLink]="['/projets']" [queryParams]="{ clientId: c.id }" class="badge rounded-pill bg-light text-primary fs-6"
+                 title="Voir les projets de ce client">{{ c.nbProjets }}</a>
+            </td>
+            <td class="fw-semibold">{{ c.budgetTotal | currency: 'TND' : 'symbol' : '1.0-0' }}</td>
+            <td class="text-end text-nowrap">
+              <a class="btn btn-icon btn-soft-info" [routerLink]="['/projets']" [queryParams]="{ clientId: c.id }" title="Projets">
+                <i class="fas fa-diagram-project"></i>
+              </a>
+              <!-- Modifier / supprimer : ADMIN uniquement -->
+              <button *appHasRole="'ADMIN'" class="btn btn-icon btn-soft-primary" type="button" (click)="openEdit(c)" title="Modifier">
+                <i class="fas fa-pen"></i>
+              </button>
+              <button *appHasRole="'ADMIN'" class="btn btn-icon btn-soft-danger" type="button" (click)="remove(c)" title="Supprimer">
+                <i class="fas fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          @if (!loading()) {
+            <tr>
+              <td colspan="6" class="text-center text-muted py-5">
+                <i class="fas fa-building fa-2x mb-2 d-block opacity-50"></i>Aucun client trouvé.
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (data(); as d) {
+    <app-pagination [page]="d.page" [size]="d.size" [totalPages]="d.totalPages" [totalElements]="d.totalElements"
+                    label="clients" (pageChange)="goTo($event)" />
+  }
+</div>
+
+@if (!auth.isAdmin()) {
+  <div class="alert alert-secondary-soft small">
+    <i class="fas fa-circle-info me-1"></i>
+    En tant que <strong>collaborateur</strong>, vous pouvez consulter et ajouter des clients. La modification et la suppression sont réservées à l'administrateur.
+  </div>
+}
+
+<!-- ===== Modal ajout / modification ===== -->
+@if (modalOpen()) {
+  <div class="psm-modal-backdrop" (click)="close()">
+    <div class="psm-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div class="psm-modal-header">
+        <h5 class="mb-0">
+          <i class="fas me-2 text-primary" [class.fa-pen]="editing()" [class.fa-building]="!editing()"></i>
+          {{ editing() ? 'Modifier le client' : 'Nouveau client' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="close()" aria-label="Fermer"></button>
+      </div>
+      <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <div class="psm-modal-body">
+          <div class="row g-3">
+            <div class="col-md-7">
+              <label class="form-label">Nom de l'entreprise *</label>
+              <input class="form-control" formControlName="nom" [class.is-invalid]="invalid('nom')" placeholder="Ex. Carthage Bank">
+              <div class="invalid-feedback">Le nom est obligatoire.</div>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Secteur</label>
+              <select class="form-select" formControlName="secteur">
+                <option value="">— Choisir —</option>
+                @for (s of secteurs; track s) { <option [value]="s">{{ s }}</option> }
+              </select>
+            </div>
+            <div class="col-md-7">
+              <label class="form-label">Email</label>
+              <input class="form-control" type="email" formControlName="email" [class.is-invalid]="invalid('email')" placeholder="contact@entreprise.tn">
+              <div class="invalid-feedback">Email invalide.</div>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Téléphone</label>
+              <input class="form-control" formControlName="tel" [class.is-invalid]="invalid('tel')" placeholder="+216 71 000 000">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Adresse</label>
+              <input class="form-control" formControlName="adresse" placeholder="Rue, ville">
+            </div>
+          </div>
+        </div>
+        <div class="psm-modal-footer">
+          <button type="button" class="btn btn-light" (click)="close()">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving()">
+            @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            {{ editing() ? 'Enregistrer' : 'Ajouter' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

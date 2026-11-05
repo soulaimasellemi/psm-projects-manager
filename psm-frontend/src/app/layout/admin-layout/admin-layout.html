@@ -1,0 +1,84 @@
+<!-- ===== Sidebar (style Argon) ===== -->
+<nav class="sidenav" [class.open]="sidebarOpen()">
+  <a class="sidenav-brand" routerLink="/dashboard" (click)="closeMenus()">
+    <span class="brand-logo"><i class="fas fa-layer-group"></i></span>
+    <span>
+      <span class="brand-name">SmartSoft</span>
+      <span class="brand-sub">Projects Manager</span>
+    </span>
+  </a>
+
+  <hr class="my-2 mx-3">
+  <h6 class="sidenav-heading">Navigation</h6>
+  <ul class="sidenav-nav">
+    @for (item of nav; track item.path) {
+      @if (visible(item)) {
+        <li>
+          <a [routerLink]="item.path" routerLinkActive="active" (click)="closeMenus()">
+            <i class="fas {{ item.icon }} {{ item.color }}"></i>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+      }
+    }
+  </ul>
+
+  <div class="sidenav-footer">
+    <div class="sidenav-card">
+      <i class="fas fa-shield-halved mb-2"></i>
+      <div class="fw-semibold">Connecté en tant que</div>
+      <span class="badge rounded-pill" [class.bg-danger]="auth.isAdmin()" [class.bg-info]="!auth.isAdmin()">
+        {{ auth.isAdmin() ? 'Administrateur' : 'Collaborateur' }}
+      </span>
+    </div>
+  </div>
+</nav>
+@if (sidebarOpen()) {
+  <div class="sidenav-backdrop" (click)="closeMenus()"></div>
+}
+
+<!-- ===== Contenu principal ===== -->
+<div class="main-content">
+  <!-- Navbar supérieure -->
+  <nav class="topbar">
+    <button class="btn btn-link text-white d-lg-none p-0 me-3" type="button" (click)="sidebarOpen.set(true)" aria-label="Menu">
+      <i class="fas fa-bars fa-lg"></i>
+    </button>
+    <h4 class="topbar-title mb-0">{{ title() }}</h4>
+
+    <div class="ms-auto position-relative">
+      <button class="user-chip" type="button" (click)="menuOpen.set(!menuOpen())">
+        <span class="avatar avatar-sm bg-gradient-white text-primary">{{ initiales() }}</span>
+        <span class="d-none d-md-inline ms-2 fw-semibold">{{ auth.displayName() }}</span>
+        <i class="fas fa-chevron-down ms-2 small"></i>
+      </button>
+      @if (menuOpen()) {
+        <div class="dropdown-backdrop" (click)="menuOpen.set(false)"></div>
+        <div class="user-menu">
+          <div class="px-3 py-2">
+            <div class="fw-semibold text-dark">{{ auth.displayName() }}</div>
+            <small class="text-muted">{{ auth.user()?.email }}</small>
+          </div>
+          <div class="dropdown-divider"></div>
+          <a routerLink="/profil" (click)="closeMenus()"><i class="fas fa-user text-success"></i>Mon profil</a>
+          <a routerLink="/dashboard" (click)="closeMenus()"><i class="fas fa-chart-pie text-primary"></i>Tableau de bord</a>
+          <div class="dropdown-divider"></div>
+          <button type="button" (click)="logout()"><i class="fas fa-right-from-bracket text-danger"></i>Déconnexion</button>
+        </div>
+      }
+    </div>
+  </nav>
+
+  <!-- Bandeau dégradé Argon -->
+  <div class="header-band"></div>
+
+  <!-- Page -->
+  <div class="container-fluid page-container">
+    <router-outlet />
+
+    <footer class="psm-footer">
+      <span>© {{ year }} <strong class="text-primary">SmartSoft Solutions</strong> — Projects Manager</span>
+      <span class="text-muted">Spring Boot · Angular · thème Argon</span>
+    </footer>
+  </div>
+</div>
