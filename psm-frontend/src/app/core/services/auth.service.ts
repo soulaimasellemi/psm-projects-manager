@@ -27,6 +27,26 @@ export class AuthService {
     return localStorage.getItem(TOKEN_KEY);
   }
 
+  // ===== ÉTAPE 1 du workshop : authentification codée en dur =====
+  /** Vérifie le login/mot de passe (en dur) puis garde le username dans sessionStorage */
+  authenticate(username: string, password: string): boolean {
+    if (username === 'amine' && password === '1234') {
+      sessionStorage.setItem('username', username);
+      return true;
+    }
+    return false;
+  }
+
+  /** Connecté = un username existe dans sessionStorage */
+  isUserLoggedIn(): boolean {
+    return sessionStorage.getItem('username') !== null;
+  }
+
+  logOut() {
+    sessionStorage.removeItem('username');
+  }
+  // ===== fin étape 1 =====
+
   login(email: string, password: string) {
     return this.http
       .post<AuthResponse>(`${this.api}/login`, { email, password })
@@ -38,6 +58,7 @@ export class AuthService {
   }
 
   logout(redirect = true) {
+    this.logOut();
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this._user.set(null);

@@ -47,6 +47,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // TEMPORAIRE (workshop étape 1) : API ouverte. Sera retiré à l'étape 2.
+                .requestMatchers("/api/**").permitAll()
                 // Public : login / register
                 .requestMatchers("/api/auth/**").permitAll()
                 // Profil de l'utilisateur connecté

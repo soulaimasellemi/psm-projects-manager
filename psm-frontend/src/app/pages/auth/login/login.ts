@@ -21,36 +21,26 @@ export class Login {
   readonly showPassword = signal(false);
 
   form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    email: ['', Validators.required], // étape 1 : 'username' (ex. amine)
     password: ['', Validators.required],
   });
 
-  /** Remplit le formulaire avec un compte de démonstration */
-  demo(role: 'admin' | 'collab') {
-    this.form.setValue(
-      role === 'admin'
-        ? { email: 'admin@smartsoft.tn', password: 'Admin@123' }
-        : { email: 'collab@smartsoft.tn', password: 'Collab@123' },
-    );
+  /** Remplit le formulaire avec le compte du workshop */
+  demo(_role: 'admin' | 'collab') {
+    this.form.setValue({ email: 'amine', password: '1234' });
   }
 
+  /** ÉTAPE 1 : checkLogin() du workshop (authentification en dur) */
   submit() {
     this.submitted.set(true);
     this.error.set(null);
     if (this.form.invalid) return;
 
-    this.loading.set(true);
     const { email, password } = this.form.getRawValue();
-    this.auth.login(email, password).subscribe({
-      next: (res) => {
-        this.loading.set(false);
-        this.toast.success(`Bienvenue ${res.user.prenom} !`);
-        this.router.navigate(['/dashboard']);
-      },
-      error: (err) => {
-        this.loading.set(false);
-        this.error.set(apiMessage(err, 'Connexion impossible.'));
-      },
-    });
+    if (this.auth.authenticate(email, password)) {
+      this.router.navigate(['/dashboard']);
+    } else {
+      this.error.set('Invalid username or password');
+    }
   }
 }
