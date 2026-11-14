@@ -117,6 +117,9 @@ Ouvrez **http://localhost:4200**. Sur la page de connexion, les boutons « Admin
 | GET | `/api/clients?q=&page=&size=` · `/api/clients/{id}` · `/api/clients/all` | Admin, Collaborateur |
 | POST | `/api/clients` | Admin, Collaborateur |
 | PUT / DELETE | `/api/clients/{id}` | **Admin** |
+| POST | `/api/clients/{id}/fichier` (multipart, champ `file`) | Admin, Collaborateur — upload PDF / image / Word, 5 Mo max |
+| GET | `/api/clients/{id}/fichier` | Admin, Collaborateur — téléchargement |
+| DELETE | `/api/clients/{id}/fichier` | **Admin** |
 | GET | `/api/projets?q=&statut=&clientId=&page=&size=` · `/api/projets/{id}` | Admin, Collaborateur |
 | POST | `/api/projets` | Admin, Collaborateur |
 | PUT / DELETE | `/api/projets/{id}` | **Admin** |
@@ -166,6 +169,8 @@ Ouvrez **http://localhost:4200**. Sur la page de connexion, les boutons « Admin
 
 * **Dashboard** : 4 indicateurs, graphique des 5 meilleurs clients par budget, répartition des projets par statut, derniers projets.
 * **Recherche, filtres et pagination** sur les clients, les projets et les utilisateurs.
+* **Email à l'admin à chaque nouveau client** (en plus de l'email d'inscription).
+* **Fichier joint par client** (upload / download), stocké dans le dossier `uploads/` (variable `UPLOAD_DIR`).
 * **Validation des inscriptions par l'admin** : un email lui est envoyé à l'inscription, puis un autre est envoyé à l'utilisateur quand son compte est activé.
 * **Page profil** : modifier ses informations et son mot de passe.
 

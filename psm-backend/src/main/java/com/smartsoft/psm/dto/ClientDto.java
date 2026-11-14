@@ -7,12 +7,12 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record ClientDto(Long id, String nom, String tel, String email, String adresse, String secteur,
-                        int nbProjets, double budgetTotal) {
+                        int nbProjets, double budgetTotal, String fichierNom) {
 
     public static ClientDto from(Client c) {
         double total = c.getProjets().stream().mapToDouble(Projet::getBudget).sum();
         return new ClientDto(c.getId(), c.getNom(), c.getTel(), c.getEmail(), c.getAdresse(), c.getSecteur(),
-                c.getProjets().size(), total);
+                c.getProjets().size(), total, c.getFichierNom());
     }
 
     /** Corps des requêtes POST / PUT */

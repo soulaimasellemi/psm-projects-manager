@@ -2,3 +2,5 @@ psm-backend/target/
 psm-frontend/node_modules/
 psm-frontend/dist/
 psm-frontend/.angular/
+psm-backend/uploads/
+uploads/

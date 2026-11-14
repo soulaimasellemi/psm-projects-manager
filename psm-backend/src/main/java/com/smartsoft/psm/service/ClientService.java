@@ -7,10 +7,12 @@ import com.smartsoft.psm.dto.PageResponse;
 import com.smartsoft.psm.entity.Client;
 import com.smartsoft.psm.exception.ApiException;
 import com.smartsoft.psm.repository.ClientRepository;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -19,9 +21,16 @@ import java.util.List;
 public class ClientService {
 
     private final ClientRepository clientRepository;
+    private final FichierService fichierService;
+    private final EmailService emailService;
 
-    public ClientService(ClientRepository clientRepository) {
+    /** Fichier prêt à être téléchargé */
+    public record FichierClient(Resource resource, String nom, String type) {}
+
+    public ClientService(ClientRepository clientRepository, FichierService fichierService, EmailService emailService) {
         this.clientRepository = clientRepository;
+        this.fichierService = fichierService;
+        this.emailService = emailService;
     }
 
     @Transactional(readOnly = true)
@@ -40,10 +49,13 @@ public class ClientService {
         return ClientDto.from(getEntity(id));
     }
 
-    public ClientDto create(ClientRequest req) {
+    /** Crée le client puis envoie un email de notification à l'admin. */
+    public ClientDto create(ClientRequest req, String creePar) {
         Client c = new Client();
         apply(c, req);
-        return ClientDto.from(clientRepository.save(c));
+        ClientDto dto = ClientDto.from(clientRepository.save(c));
+        emailService.notifierAdminNouveauClient(dto, creePar);
+        return dto;
     }
 
     public ClientDto update(Long id, ClientRequest req) {
@@ -53,7 +65,39 @@ public class ClientService {
     }
 
     public void delete(Long id) {
-        clientRepository.delete(getEntity(id)); // supprime aussi ses projets (cascade)
+        Client c = getEntity(id);
+        clientRepository.delete(c); // supprime aussi ses projets (cascade)
+        fichierService.supprimer(c.getFichierStocke());
+    }
+
+    // ---------- Fichier joint (upload / download) ----------
+
+    /** Envoie (ou remplace) le fichier joint du client. */
+    public ClientDto uploadFichier(Long id, MultipartFile file) {
+        Client c = getEntity(id);
+        String ancien = c.getFichierStocke();
+        String nomOrigine = file.getOriginalFilename() == null ? "fichier" : file.getOriginalFilename();
+        c.setFichierStocke(fichierService.enregistrer(file));
+        c.setFichierNom(nomOrigine.length() > 255 ? nomOrigine.substring(nomOrigine.length() - 255) : nomOrigine);
+        c.setFichierType(fichierService.typeMime(nomOrigine));
+        fichierService.supprimer(ancien);
+        return ClientDto.from(c);
+    }
+
+    @Transactional(readOnly = true)
+    public FichierClient downloadFichier(Long id) {
+        Client c = getEntity(id);
+        if (c.getFichierStocke() == null) throw ApiException.notFound("Ce client n'a pas de fichier joint");
+        return new FichierClient(fichierService.charger(c.getFichierStocke()), c.getFichierNom(), c.getFichierType());
+    }
+
+    public void deleteFichier(Long id) {
+        Client c = getEntity(id);
+        if (c.getFichierStocke() == null) throw ApiException.notFound("Ce client n'a pas de fichier joint");
+        fichierService.supprimer(c.getFichierStocke());
+        c.setFichierStocke(null);
+        c.setFichierNom(null);
+        c.setFichierType(null);
     }
 
     Client getEntity(Long id) {

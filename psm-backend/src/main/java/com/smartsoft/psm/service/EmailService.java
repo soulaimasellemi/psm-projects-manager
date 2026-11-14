@@ -1,5 +1,6 @@
 package com.smartsoft.psm.service;
 
+import com.smartsoft.psm.dto.ClientDto;
 import com.smartsoft.psm.entity.User;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
@@ -49,6 +50,23 @@ public class EmailService {
         envoyer(adminEmail, "[PSM] Nouvelle inscription : " + u.getPrenom() + " " + u.getNom(), contenu);
     }
 
+    /** Notifie l'admin qu'un nouveau client vient d'être créé. */
+    @Async
+    public void notifierAdminNouveauClient(ClientDto c, String creePar) {
+        String contenu = """
+                <p>Bonjour,</p>
+                <p>Un nouveau client vient d'être ajouté sur <b>Projects Manager</b> par <b>%s</b> :</p>
+                <table style="border-collapse:collapse;margin:16px 0">
+                  <tr><td style="padding:6px 12px;color:#8898aa">Nom</td><td style="padding:6px 12px"><b>%s</b></td></tr>
+                  <tr><td style="padding:6px 12px;color:#8898aa">Email</td><td style="padding:6px 12px">%s</td></tr>
+                  <tr><td style="padding:6px 12px;color:#8898aa">Téléphone</td><td style="padding:6px 12px">%s</td></tr>
+                  <tr><td style="padding:6px 12px;color:#8898aa">Adresse</td><td style="padding:6px 12px">%s</td></tr>
+                </table>
+                <p><a href="%s/clients" style="background:#5e72e4;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600">Voir les clients</a></p>
+                """.formatted(esc(creePar), esc(c.nom()), ouTiret(c.email()), ouTiret(c.tel()), ouTiret(c.adresse()), frontendUrl);
+        envoyer(adminEmail, "[PSM] Nouveau client : " + c.nom(), contenu);
+    }
+
     /** Prévient l'utilisateur que son compte a été activé. */
     @Async
     public void notifierActivation(User u) {
@@ -73,6 +91,10 @@ public class EmailService {
         } catch (Exception e) {
             log.warn("Échec d'envoi de l'email à {} ({}). Vérifiez la config spring.mail.*", to, e.getMessage());
         }
+    }
+
+    private static String ouTiret(String s) {
+        return s == null || s.isBlank() ? "-" : esc(s);
     }
 
     private static String esc(String s) {

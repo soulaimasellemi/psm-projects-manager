@@ -34,6 +34,16 @@ public class Client {
     @Column(length = 60)
     private String secteur;
 
+    /** Fichier joint (photo ou document) : nom d'origine, nom sur le disque, type MIME */
+    @Column(length = 255)
+    private String fichierNom;
+
+    @Column(length = 80)
+    private String fichierStocke;
+
+    @Column(length = 100)
+    private String fichierType;
+
     @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = true)
     @BatchSize(size = 50)
     private List<Projet> projets = new ArrayList<>();
@@ -60,6 +70,12 @@ public class Client {
     public void setAdresse(String adresse) { this.adresse = adresse; }
     public String getSecteur() { return secteur; }
     public void setSecteur(String secteur) { this.secteur = secteur; }
+    public String getFichierNom() { return fichierNom; }
+    public void setFichierNom(String fichierNom) { this.fichierNom = fichierNom; }
+    public String getFichierStocke() { return fichierStocke; }
+    public void setFichierStocke(String fichierStocke) { this.fichierStocke = fichierStocke; }
+    public String getFichierType() { return fichierType; }
+    public void setFichierType(String fichierType) { this.fichierType = fichierType; }
     public List<Projet> getProjets() { return projets; }
     public void setProjets(List<Projet> projets) { this.projets = projets; }
 }

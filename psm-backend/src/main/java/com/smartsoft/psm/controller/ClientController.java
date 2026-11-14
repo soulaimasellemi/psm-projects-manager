@@ -6,9 +6,17 @@ import com.smartsoft.psm.dto.ClientDto.ClientRequest;
 import com.smartsoft.psm.dto.PageResponse;
 import com.smartsoft.psm.service.ClientService;
 import jakarta.validation.Valid;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.nio.charset.StandardCharsets;
 
 import java.util.List;
 
@@ -18,6 +26,8 @@ import java.util.List;
  * PUT    : ADMIN
  * DELETE : ADMIN
  * (règles appliquées dans SecurityConfig)
+ *
+ * Fichier joint : POST /{id}/fichier (upload), GET /{id}/fichier (download), DELETE /{id}/fichier (ADMIN)
  */
 @RestController
 @RequestMapping("/api/clients")
@@ -48,8 +58,8 @@ public class ClientController {
     }
 
     @PostMapping
-    public ResponseEntity<ClientDto> create(@Valid @RequestBody ClientRequest req) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(clientService.create(req));
+    public ResponseEntity<ClientDto> create(@Valid @RequestBody ClientRequest req, Authentication auth) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(clientService.create(req, auth.getName()));
     }
 
     @PutMapping("/{id}")
@@ -60,6 +70,32 @@ public class ClientController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         clientService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ---------- Fichier joint ----------
+
+    /** Upload : formulaire multipart avec un champ "file" */
+    @PostMapping(value = "/{id}/fichier", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ClientDto uploadFichier(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        return clientService.uploadFichier(id, file);
+    }
+
+    /** Download : renvoie le fichier avec son nom d'origine */
+    @GetMapping("/{id}/fichier")
+    public ResponseEntity<Resource> downloadFichier(@PathVariable Long id) {
+        var f = clientService.downloadFichier(id);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(f.type()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(f.nom(), StandardCharsets.UTF_8).build().toString())
+                .body(f.resource());
+    }
+
+    /** Supprime le fichier joint (ADMIN) */
+    @DeleteMapping("/{id}/fichier")
+    public ResponseEntity<Void> deleteFichier(@PathVariable Long id) {
+        clientService.deleteFichier(id);
         return ResponseEntity.noContent().build();
     }
 }
