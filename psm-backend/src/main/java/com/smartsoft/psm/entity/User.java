@@ -43,6 +43,12 @@ public class User implements UserDetails {
 
     private LocalDateTime dateCreation;
 
+    /** Mot de passe oublié : empreinte SHA-256 du jeton envoyé par email (jamais le jeton en clair) */
+    @Column(length = 64)
+    private String resetTokenHash;
+
+    private LocalDateTime resetTokenExpiration;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -96,4 +102,10 @@ public class User implements UserDetails {
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
+    public String getResetTokenHash() { return resetTokenHash; }
+    public void setResetTokenHash(String resetTokenHash) { this.resetTokenHash = resetTokenHash; }
+    public LocalDateTime getResetTokenExpiration() { return resetTokenExpiration; }
+    public void setResetTokenExpiration(LocalDateTime resetTokenExpiration) { this.resetTokenExpiration = resetTokenExpiration; }
+
+    public String getNomComplet() { return prenom + " " + nom; }
 }

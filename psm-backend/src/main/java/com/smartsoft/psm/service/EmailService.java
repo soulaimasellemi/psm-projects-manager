@@ -78,6 +78,20 @@ public class EmailService {
         envoyer(u.getEmail(), "[PSM] Votre compte est activé", contenu);
     }
 
+    /** Mot de passe oublié : lien de réinitialisation (valable quelques minutes, à usage unique). */
+    @Async
+    public void envoyerLienReinitialisation(User u, String token, int validiteMinutes) {
+        String lien = frontendUrl + "/reinitialiser-mot-de-passe?token=" + token;
+        String contenu = """
+                <p>Bonjour <b>%s</b>,</p>
+                <p>Vous avez demandé à réinitialiser votre mot de passe <b>Projects Manager</b>.</p>
+                <p><a href="%s" style="background:#5e72e4;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600">Choisir un nouveau mot de passe</a></p>
+                <p style="color:#8898aa;font-size:13px">Ce lien est valable <b>%d minutes</b> et ne peut être utilisé qu'une seule fois.
+                Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : votre mot de passe actuel reste inchangé.</p>
+                """.formatted(esc(u.getPrenom()), lien, validiteMinutes);
+        envoyer(u.getEmail(), "[PSM] Réinitialisation de votre mot de passe", contenu);
+    }
+
     private void envoyer(String to, String sujet, String contenu) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

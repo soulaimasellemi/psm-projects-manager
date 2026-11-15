@@ -4,7 +4,9 @@ import com.smartsoft.psm.dto.PageResponse;
 import com.smartsoft.psm.dto.ProjetDto;
 import com.smartsoft.psm.dto.ProjetDto.ProjetRequest;
 import com.smartsoft.psm.entity.StatutProjet;
+import com.smartsoft.psm.service.ExportService;
 import com.smartsoft.psm.service.ProjetService;
+import com.smartsoft.psm.service.ProjetService.Filtres;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,14 +23,29 @@ public class ProjetController {
         this.projetService = projetService;
     }
 
-    /** Filtres optionnels : q (texte), statut, clientId */
+    /** Filtres optionnels : q (texte), statut, clientId, membreId (collaborateur affecté), enRetard */
     @GetMapping
     public PageResponse<ProjetDto> list(@RequestParam(defaultValue = "") String q,
                                         @RequestParam(required = false) StatutProjet statut,
                                         @RequestParam(required = false) Long clientId,
+                                        @RequestParam(required = false) Long membreId,
+                                        @RequestParam(defaultValue = "false") boolean enRetard,
                                         @RequestParam(defaultValue = "0") int page,
                                         @RequestParam(defaultValue = "10") int size) {
-        return projetService.findAll(q, statut, clientId, page, size);
+        return projetService.findAll(new Filtres(q, statut, clientId, membreId, enRetard), page, size);
+    }
+
+    /** Export Excel ou PDF de la liste filtrée : /api/projets/export?format=xlsx|pdf (mêmes filtres que la liste) */
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(@RequestParam(defaultValue = "xlsx") String format,
+                                         @RequestParam(defaultValue = "") String q,
+                                         @RequestParam(required = false) StatutProjet statut,
+                                         @RequestParam(required = false) Long clientId,
+                                         @RequestParam(required = false) Long membreId,
+                                         @RequestParam(defaultValue = "false") boolean enRetard) {
+        var fichier = projetService.exporter(new Filtres(q, statut, clientId, membreId, enRetard),
+                ExportService.Format.parse(format));
+        return ExportResponses.telechargement(fichier);
     }
 
     @GetMapping("/{id}")

@@ -21,6 +21,16 @@ public final class AuthDtos {
             @NotBlank(message = "Le nom est obligatoire") @Size(max = 80) String nom,
             @NotBlank(message = "Le prénom est obligatoire") @Size(max = 80) String prenom) {}
 
+    /** Mot de passe oublié : étape 1, demande du lien par email */
+    public record ForgotPasswordRequest(
+            @NotBlank(message = "L'email est obligatoire") @Email(message = "Email invalide") String email) {}
+
+    /** Mot de passe oublié : étape 2, nouveau mot de passe avec le jeton reçu par email */
+    public record ResetPasswordRequest(
+            @NotBlank(message = "Le lien de réinitialisation est invalide") String token,
+            @NotBlank(message = "Le mot de passe est obligatoire")
+            @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères") String password) {}
+
     public record AuthResponse(String token, UserDto user) {}
 
     public record MessageResponse(String message) {}

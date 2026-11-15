@@ -16,6 +16,18 @@ export const routes: Routes = [
     title: 'Inscription | PSM',
     loadComponent: () => import('./pages/auth/register/register').then((m) => m.Register),
   },
+  {
+    path: 'mot-de-passe-oublie',
+    canActivate: [guestGuard],
+    title: 'Mot de passe oublié | PSM',
+    loadComponent: () => import('./pages/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+  },
+  {
+    // Lien reçu par email : /reinitialiser-mot-de-passe?token=...
+    path: 'reinitialiser-mot-de-passe',
+    title: 'Nouveau mot de passe | PSM',
+    loadComponent: () => import('./pages/auth/reset-password/reset-password').then((m) => m.ResetPassword),
+  },
 
   // Espace connecté (AuthGuard)
   {
@@ -44,11 +56,25 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/projets/projets').then((m) => m.Projets),
       },
       {
+        // Détail d'un projet : santé + tableau Kanban des tâches
+        path: 'projets/:id',
+        title: 'Projet | PSM',
+        data: { title: 'Détail du projet' },
+        loadComponent: () => import('./pages/projet-detail/projet-detail').then((m) => m.ProjetDetail),
+      },
+      {
         path: 'utilisateurs',
         title: 'Utilisateurs | PSM',
         canActivate: [roleGuard],
         data: { title: 'Utilisateurs', roles: ['ADMIN'] }, // RoleGuard : admin uniquement
         loadComponent: () => import('./pages/users/users').then((m) => m.Users),
+      },
+      {
+        path: 'historique',
+        title: 'Historique | PSM',
+        canActivate: [roleGuard],
+        data: { title: 'Historique des actions', roles: ['ADMIN'] }, // RoleGuard : admin uniquement
+        loadComponent: () => import('./pages/historique/historique').then((m) => m.Historique),
       },
       {
         path: 'profil',

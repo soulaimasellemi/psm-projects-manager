@@ -27,6 +27,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
             """)
     Page<User> search(@Param("q") String q, @Param("enabled") Boolean enabled, Pageable pageable);
 
+    /** Comptes actifs, pour la liste des collaborateurs à affecter aux projets */
+    List<User> findByEnabledTrueOrderByPrenomAscNomAsc();
+
+    Optional<User> findByResetTokenHash(String resetTokenHash);
+
     @Query("select u from User u join u.roles r where r.libelle = :libelle and u.enabled = true")
     List<User> findActiveByRole(@Param("libelle") String libelle);
 }

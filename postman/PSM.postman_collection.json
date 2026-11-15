@@ -38,6 +38,18 @@
     {
       "key": "pendingUserId",
       "value": "3"
+    },
+    {
+      "key": "newAdminEmail",
+      "value": ""
+    },
+    {
+      "key": "newAdminId",
+      "value": ""
+    },
+    {
+      "key": "tacheId",
+      "value": ""
     }
   ],
   "item": [
@@ -1021,6 +1033,178 @@
           ]
         },
         {
+          "name": "Créer un administrateur (ADMIN)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"newAdminEmail\", \"admin.\" + Date.now() + \"@smartsoft.tn\");"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "const u = pm.response.json();",
+                  "pm.test(\"Rôle ADMIN attribué\", () => pm.expect(u.roles).to.include(\"ADMIN\"));",
+                  "pm.test(\"Compte actif\", () => pm.expect(u.enabled).to.be.true);",
+                  "pm.test(\"Mot de passe jamais renvoyé\", () => pm.expect(u).to.not.have.property(\"password\"));",
+                  "pm.collectionVariables.set(\"newAdminId\", u.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newAdminEmail}}\",\n  \"password\": \"NouvelAdmin@2026\",\n  \"tel\": \"+216 20 123 456\",\n  \"nom\": \"Admin\",\n  \"prenom\": \"Nouveau\",\n  \"roles\": [\n    \"ADMIN\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Login du nouvel administrateur (token JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "pm.test(\"Token JWT reçu\", () => pm.expect(r.token.split(\".\").length).to.eql(3));",
+                  "pm.test(\"Rôle ADMIN dans la réponse\", () => pm.expect(r.user.roles).to.include(\"ADMIN\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newAdminEmail}}\",\n  \"password\": \"NouvelAdmin@2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Créer un compte déjà existant (409 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{newAdminEmail}}\",\n  \"password\": \"NouvelAdmin@2026\",\n  \"tel\": \"+216 20 123 456\",\n  \"nom\": \"Admin\",\n  \"prenom\": \"Nouveau\",\n  \"roles\": [\n    \"ADMIN\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer le nouvel administrateur (204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{newAdminId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "{{newAdminId}}"
+              ]
+            }
+          }
+        },
+        {
           "name": "Statistiques du dashboard",
           "request": {
             "method": "GET",
@@ -1338,6 +1522,101 @@
           ]
         },
         {
+          "name": "COLLAB : créer un administrateur (403 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCollab}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pirate@smartsoft.tn\",\n  \"password\": \"NouvelAdmin@2026\",\n  \"tel\": \"+216 20 123 456\",\n  \"nom\": \"Admin\",\n  \"prenom\": \"Nouveau\",\n  \"roles\": [\n    \"ADMIN\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Sans token : créer un administrateur (401 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 401\", () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"pirate@smartsoft.tn\",\n  \"password\": \"NouvelAdmin@2026\",\n  \"tel\": \"+216 20 123 456\",\n  \"nom\": \"Admin\",\n  \"prenom\": \"Nouveau\",\n  \"roles\": [\n    \"ADMIN\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "ADMIN : supprimer le client de test (204)",
           "request": {
             "method": "DELETE",
@@ -1364,6 +1643,847 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "6. Suivi, équipe, export, historique, mot de passe oublié",
+      "item": [
+        {
+          "name": "Collaborateurs à affecter (COLLAB : 200)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Liste de comptes actifs\", () => pm.expect(pm.response.json()).to.be.an(\"array\").that.is.not.empty);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCollab}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/users/options",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "options"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Projets en retard",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tous en retard\", () => pm.response.json().content.forEach(p => pm.expect(p.enRetard).to.be.true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projets?enRetard=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets"
+              ],
+              "query": [
+                {
+                  "key": "enRetard",
+                  "value": "true"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Projets d'un collaborateur (membreId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Membre présent\", () => pm.response.json().content.forEach(p => pm.expect(p.membres.map(m => m.id)).to.include(2)));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projets?membreId=2",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets"
+              ],
+              "query": [
+                {
+                  "key": "membreId",
+                  "value": "2"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer un projet : fin avant début (400 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projets",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"libelle\": \"Test dates\",\n  \"budget\": 1000,\n  \"duree\": 1,\n  \"idClient\": 1,\n  \"dateDebut\": \"2026-09-01\",\n  \"dateFinPrevue\": \"2026-08-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Statistiques : retards et avancement",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test(\"Champs de suivi\", () => { pm.expect(s).to.have.property(\"projetsEnRetard\"); pm.expect(s).to.have.property(\"avancementMoyen\"); pm.expect(s.avancements).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stats"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export clients Excel",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Fichier Excel\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"spreadsheetml\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/clients/export?format=xlsx",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "clients",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "xlsx"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export projets PDF (COLLAB)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Fichier PDF\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/pdf\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCollab}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projets/export?format=pdf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "pdf"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Export format inconnu (400 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projets/export?format=doc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets",
+                "export"
+              ],
+              "query": [
+                {
+                  "key": "format",
+                  "value": "doc"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Historique des actions (ADMIN)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Actions enregistrées\", () => pm.expect(pm.response.json().totalElements).to.be.above(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activites?size=10",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activites"
+              ],
+              "query": [
+                {
+                  "key": "size",
+                  "value": "10"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Historique filtré : suppressions de projets",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activites?cible=PROJET&action=SUPPRESSION",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activites"
+              ],
+              "query": [
+                {
+                  "key": "cible",
+                  "value": "PROJET"
+                },
+                {
+                  "key": "action",
+                  "value": "SUPPRESSION"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "COLLAB : historique (403 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCollab}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/activites",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "activites"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mot de passe oublié (réponse identique si email inconnu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Message générique\", () => pm.expect(pm.response.json().message).to.include(\"Si un compte\"));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"personne@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Réinitialisation : jeton invalide (400 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/reset-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "reset-password"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"jeton-invalide\",\n  \"password\": \"NouveauMdp@2026\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Kanban et santé des projets",
+      "item": [
+        {
+          "name": "Détail projet : santé (score, niveau, raisons)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json().sante;",
+                  "pm.test(\"Score 0-100\", () => pm.expect(s.score).to.be.within(0, 100));",
+                  "pm.test(\"Niveau connu\", () => pm.expect([\"SAIN\", \"A_SURVEILLER\", \"CRITIQUE\"]).to.include(s.niveau));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projets/{{projetId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets",
+                "{{projetId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Tâches du projet",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/projets/{{projetId}}/taches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets",
+                "{{projetId}}",
+                "taches"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Créer une tâche",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 201\", () => pm.response.to.have.status(201));",
+                  "const t = pm.response.json();",
+                  "pm.test(\"Dans À faire\", () => pm.expect(t.statut).to.eql(\"A_FAIRE\"));",
+                  "pm.collectionVariables.set(\"tacheId\", t.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projets/{{projetId}}/taches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets",
+                "{{projetId}}",
+                "taches"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"Tâche Postman\",\n  \"priorite\": \"HAUTE\",\n  \"echeance\": \"2030-01-31\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Glisser la tâche dans Terminée (avancement recalculé)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Terminée et datée\", () => { const t = pm.response.json(); pm.expect(t.statut).to.eql(\"TERMINEE\"); pm.expect(t.dateTerminee).to.be.a(\"string\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/taches/{{tacheId}}/deplacer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "taches",
+                "{{tacheId}}",
+                "deplacer"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut\": \"TERMINEE\",\n  \"ordre\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "COLLAB non membre : déplacer (403 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCollab}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/taches/{{tacheId}}/deplacer",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "taches",
+                "{{tacheId}}",
+                "deplacer"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"statut\": \"A_FAIRE\",\n  \"ordre\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "COLLAB : supprimer une tâche (403 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCollab}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/taches/{{tacheId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "taches",
+                "{{tacheId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Titre vide (400 attendu)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/projets/{{projetId}}/taches",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "projets",
+                "{{projetId}}",
+                "taches"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titre\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Supprimer la tâche (ADMIN : 204)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/taches/{{tacheId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "taches",
+                "{{tacheId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Dashboard : projets à risque",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Statut 200\", () => pm.response.to.have.status(200));",
+                  "const s = pm.response.json();",
+                  "pm.test(\"Santé du portefeuille\", () => { pm.expect(s.santeMoyenne).to.be.within(0, 100); pm.expect(s.projetsARisque).to.be.an(\"array\"); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/stats",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "stats"
+              ]
+            }
+          }
         }
       ]
     }

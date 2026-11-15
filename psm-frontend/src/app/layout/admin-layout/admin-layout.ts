@@ -31,6 +31,7 @@ export class AdminLayout {
     { path: '/clients', label: 'Clients', icon: 'fa-building', color: 'text-info' },
     { path: '/projets', label: 'Projets', icon: 'fa-diagram-project', color: 'text-orange' },
     { path: '/utilisateurs', label: 'Utilisateurs', icon: 'fa-users-gear', color: 'text-danger', roles: ['ADMIN'] },
+    { path: '/historique', label: 'Historique', icon: 'fa-clock-rotate-left', color: 'text-warning', roles: ['ADMIN'] },
     { path: '/profil', label: 'Mon profil', icon: 'fa-user', color: 'text-success' },
   ];
 

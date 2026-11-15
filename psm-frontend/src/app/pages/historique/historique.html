@@ -1,0 +1,93 @@
+<div class="card mb-4">
+  <div class="card-header">
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+      <div>
+        <h5 class="mb-0">Historique des actions</h5>
+        <small class="text-muted">Qui a créé, modifié ou supprimé quoi, et quand · {{ data()?.totalElements ?? 0 }} action(s)</small>
+      </div>
+      <button class="btn btn-light ms-auto" type="button" (click)="load()" title="Actualiser">
+        <i class="fas fa-rotate" [class.fa-spin]="loading()"></i>
+      </button>
+    </div>
+
+    <div class="row g-2 mt-3">
+      <div class="col-md-6">
+        <div class="input-group input-group-alternative">
+          <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
+          <input class="form-control" placeholder="Auteur, email ou détail (ex. Carthage)…" (input)="onSearch($any($event.target).value)">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" (change)="onCible($any($event.target).value)">
+          <option value="">Toutes les ressources</option>
+          @for (c of listeCibles; track c) { <option [value]="c">{{ cibles[c].label }}s</option> }
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" (change)="onAction($any($event.target).value)">
+          <option value="">Toutes les actions</option>
+          @for (a of listeActions; track a) { <option [value]="a">{{ actions[a].label }}</option> }
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-items-center table-flush table-hover mb-0">
+      <thead class="thead-light">
+        <tr>
+          <th>Date</th>
+          <th>Auteur</th>
+          <th>Action</th>
+          <th>Ressource</th>
+          <th>Détails</th>
+        </tr>
+      </thead>
+      <tbody>
+        @if (loading() && !data()) {
+          <tr><td colspan="5" class="text-center py-5"><span class="spinner-border text-primary"></span></td></tr>
+        }
+        @for (a of data()?.content ?? []; track a.id) {
+          <tr>
+            <td class="text-nowrap small">
+              <div class="fw-semibold text-dark">{{ a.dateAction | date: 'dd/MM/yyyy' }}</div>
+              <span class="text-muted">{{ a.dateAction | date: 'HH:mm:ss' }}</span>
+            </td>
+            <td>
+              <div class="d-flex align-items-center">
+                <span class="avatar avatar-xs bg-gradient-primary me-2">{{ initiales(a.auteurNom) }}</span>
+                <div class="small">
+                  <div class="fw-semibold text-dark">{{ a.auteurNom || 'Système' }}</div>
+                  @if (a.auteurEmail) { <span class="text-muted">{{ a.auteurEmail }}</span> }
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge badge-soft-{{ actions[a.action].color }}">
+                <i class="fas {{ actions[a.action].icon }} me-1"></i>{{ actions[a.action].label }}
+              </span>
+            </td>
+            <td class="small text-nowrap">
+              <i class="fas {{ cibles[a.cible].icon }} text-muted me-1"></i>{{ cibles[a.cible].label }}
+              @if (a.cibleId) { <span class="text-muted">#{{ a.cibleId }}</span> }
+            </td>
+            <td class="small" style="max-width: 420px; white-space: normal">{{ a.details }}</td>
+          </tr>
+        } @empty {
+          @if (!loading()) {
+            <tr>
+              <td colspan="5" class="text-center text-muted py-5">
+                <i class="fas fa-clock-rotate-left fa-2x mb-2 d-block opacity-50"></i>Aucune action enregistrée.
+              </td>
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (data(); as d) {
+    <app-pagination [page]="d.page" [size]="d.size" [totalPages]="d.totalPages" [totalElements]="d.totalElements"
+                    label="actions" (pageChange)="goTo($event)" />
+  }
+</div>

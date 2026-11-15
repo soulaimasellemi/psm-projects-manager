@@ -110,6 +110,8 @@ a { text-decoration: none; }
 .badge-soft-primary { background: rgba($primary, 0.12); color: $primary; }
 .badge-soft-info { background: rgba($info, 0.15); color: #03acca; }
 .badge-soft-danger { background: rgba($danger, 0.12); color: $danger; }
+.badge-soft-success { background: rgba($success, 0.15); color: #1aae6f; }
+.badge-soft-warning { background: rgba($warning, 0.14); color: #ea5126; }
 .badge-dot {
   display: inline-flex; align-items: center; font-size: 0.8rem; font-weight: 600; color: $text;
   i { width: 0.5rem; height: 0.5rem; border-radius: 50%; margin-right: 0.5rem; display: inline-block; }
@@ -136,6 +138,7 @@ a { text-decoration: none; }
   &.icon-shape-lg { width: 80px; height: 80px; font-size: 2rem; }
 }
 .chart-box { position: relative; height: 300px; }
+.legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 0.35rem; vertical-align: middle; }
 .shortcut { transition: transform 0.15s ease; &:hover { transform: translateY(-3px); } }
 .detail-tile {
   background: #f6f9fc; border-radius: 0.5rem; padding: 0.75rem 1rem; height: 100%;
@@ -150,6 +153,93 @@ a { text-decoration: none; }
   color: #fff; font-weight: 600; font-size: 0.85rem;
   &.avatar-sm { width: 36px; height: 36px; font-size: 0.8rem; }
   &.avatar-xl { width: 120px; height: 120px; font-size: 2.4rem; border: 5px solid #fff; box-shadow: $shadow; }
+  &.avatar-xs { width: 28px; height: 28px; font-size: 0.65rem; }
+}
+// Avatars superposés (équipe d'un projet)
+.avatar-group {
+  display: inline-flex; align-items: center;
+  .avatar { border: 2px solid #fff; }
+  .avatar + .avatar { margin-left: -8px; }
+}
+.bg-gradient-secondary { background: linear-gradient(87deg, $muted 0, #a0aec0 100%) !important; }
+// Membre affiché dans le détail d'un projet
+.member-chip {
+  display: inline-flex; align-items: center; padding: 0.25rem 0.75rem 0.25rem 0.25rem;
+  background: #f6f9fc; border-radius: 2rem; font-size: 0.8rem; font-weight: 600; color: $text;
+}
+// ---------- Page détail projet : santé ----------
+.back-link { color: #fff; font-weight: 600; font-size: 0.85rem; &:hover { color: rgba(#fff, 0.8); } }
+.min-w-0 { min-width: 0; }
+.health-gauge {
+  width: 110px; height: 110px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; transition: background 0.4s ease;
+}
+.health-gauge-inner {
+  width: 86px; height: 86px; border-radius: 50%; background: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  small { color: $muted; font-size: 0.7rem; }
+}
+.health-score { font-size: 1.9rem; font-weight: 700; line-height: 1; }
+.health-reasons {
+  list-style: none; padding: 0; margin: 0;
+  li {
+    display: flex; gap: 0.5rem; align-items: baseline; padding: 0.5rem 0.75rem; margin-bottom: 0.4rem;
+    background: rgba($danger, 0.06); border-radius: 0.5rem; font-size: 0.85rem; color: $text;
+    i { color: $danger; }
+    &.ok { background: rgba($success, 0.08); i { color: $success; } }
+  }
+}
+
+// Liste des projets à risque (dashboard)
+.risk-row {
+  display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0.5rem; border-radius: 0.5rem;
+  color: inherit; transition: background 0.15s ease;
+  & + & { border-top: 1px solid $border; }
+  &:hover { background: #f6f9fc; }
+}
+.risk-score {
+  width: 44px; height: 44px; border-radius: 0.6rem; color: #fff; font-weight: 700; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.project-link:hover { color: $primary !important; }
+
+// ---------- Kanban ----------
+.kanban { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+@media (max-width: 991.98px) { .kanban { grid-template-columns: 1fr; } }
+.kanban-col { background: #eef1f8; border-radius: 0.75rem; padding: 0.85rem; display: flex; flex-direction: column; }
+.kanban-col-header {
+  display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: #32325d;
+  font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; padding: 0 0.25rem 0.75rem;
+}
+.kanban-list { min-height: 120px; flex: 1; display: flex; flex-direction: column; gap: 0.6rem; }
+.kanban-card {
+  background: #fff; border-radius: 0.6rem; padding: 0.75rem 0.85rem; cursor: grab;
+  box-shadow: 0 1px 3px rgba(50, 50, 93, 0.12); border-left: 3px solid transparent;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  &:hover { box-shadow: $shadow-btn; transform: translateY(-1px); }
+  &.late { border-left-color: $danger; }
+  &.done .kanban-title { text-decoration: line-through; color: $muted; }
+}
+.kanban-title { font-weight: 600; color: #32325d; font-size: 0.9rem; line-height: 1.3; }
+.kanban-empty {
+  border: 2px dashed #cfd6e4; border-radius: 0.6rem; padding: 1.25rem; text-align: center;
+  color: $muted; font-size: 0.8rem;
+}
+.kanban-placeholder { background: rgba($primary, 0.08); border: 2px dashed rgba($primary, 0.4); border-radius: 0.6rem; min-height: 70px; }
+// Pendant le glisser-déposer (Angular CDK)
+.cdk-drag-preview { box-shadow: 0 12px 28px rgba(50, 50, 93, 0.25) !important; border-radius: 0.6rem; transform: rotate(2deg); cursor: grabbing; }
+.cdk-drag-animating { transition: transform 200ms cubic-bezier(0, 0, 0.2, 1); }
+.kanban-list.cdk-drop-list-dragging .kanban-card:not(.cdk-drag-placeholder) { transition: transform 200ms cubic-bezier(0, 0, 0.2, 1); }
+
+// Sélection des collaborateurs dans le formulaire projet
+.members-picker {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.5rem;
+  max-height: 200px; overflow-y: auto; padding: 2px;
+}
+.member-option {
+  display: flex; align-items: center; padding: 0.5rem 0.75rem; border: 1px solid $border; border-radius: 0.5rem;
+  cursor: pointer; font-size: 0.8rem; line-height: 1.2; transition: all 0.15s ease; min-width: 0;
+  &.selected { border-color: $primary; background: rgba($primary, 0.05); }
 }
 
 // ---------- Tableaux ----------

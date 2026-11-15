@@ -5,7 +5,7 @@ import { Chart, registerables } from 'chart.js';
 import { StatsService } from '../../core/services/api.services';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
-import { STATUTS, Stats, statutInfo } from '../../core/models';
+import { NIVEAUX_SANTE, STATUTS, Stats, statutInfo } from '../../core/models';
 
 Chart.register(...registerables);
 
@@ -24,9 +24,11 @@ export class Dashboard implements OnInit, OnDestroy {
   readonly stats = signal<Stats | null>(null);
   readonly loading = signal(true);
   readonly statutInfo = statutInfo;
+  readonly niveaux = NIVEAUX_SANTE;
 
   private statutCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('statutCanvas');
   private budgetCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('budgetCanvas');
+  private avancementCanvas = viewChild.required<ElementRef<HTMLCanvasElement>>('avancementCanvas');
   private charts: Chart[] = [];
 
   ngOnInit() {
@@ -110,6 +112,41 @@ export class Dashboard implements OnInit, OnDestroy {
       },
     });
 
-    this.charts = [doughnut, bar];
+    // Avancement des projets en cours (barres horizontales, rouge = en retard)
+    const avancement = new Chart(this.avancementCanvas().nativeElement, {
+      type: 'bar',
+      data: {
+        labels: s.avancements.map((a) => (a.libelle.length > 28 ? a.libelle.slice(0, 27) + '…' : a.libelle)),
+        datasets: [{
+          label: 'Avancement (%)',
+          data: s.avancements.map((a) => a.avancement),
+          backgroundColor: s.avancements.map((a) => (a.enRetard ? '#f5365c' : '#5e72e4')),
+          borderRadius: 6,
+          maxBarThickness: 22,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const a = s.avancements[ctx.dataIndex]!;
+                return ` ${a.avancement} %${a.enRetard ? ' (en retard)' : ''}`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: { min: 0, max: 100, ticks: { color: '#8898aa', callback: (v) => `${v}%` }, grid: { color: '#e9ecef' } },
+          y: { grid: { display: false }, ticks: { color: '#525f7f' } },
+        },
+      },
+    });
+
+    this.charts = [doughnut, bar, avancement];
   }
 }

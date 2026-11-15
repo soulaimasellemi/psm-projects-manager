@@ -1,0 +1,226 @@
+@if (loading()) {
+  <div class="card"><div class="card-body text-center py-5"><span class="spinner-border text-primary"></span></div></div>
+}
+
+@if (projet(); as p) {
+  <a routerLink="/projets" class="back-link mb-3 d-inline-block"><i class="fas fa-arrow-left me-1"></i>Tous les projets</a>
+
+  <!-- ===== En-tête + santé ===== -->
+  <div class="row g-4 mb-4">
+    <div class="col-xl-8">
+      <div class="card h-100">
+        <div class="card-body">
+          <div class="d-flex flex-wrap align-items-start gap-3">
+            <span class="icon-shape bg-gradient-{{ statutInfo(p.statut).color }} text-white"><i class="fas fa-code"></i></span>
+            <div class="flex-fill min-w-0">
+              <h3 class="mb-1 text-dark">{{ p.libelle }}</h3>
+              <div class="text-muted small">
+                <i class="fas fa-building me-1"></i>{{ p.nomClient }}
+                <span class="mx-2">·</span>
+                <span class="badge-dot"><i class="bg-{{ statutInfo(p.statut).color }}"></i>{{ statutInfo(p.statut).label }}</span>
+                @if (p.enRetard) { <span class="badge badge-soft-danger ms-2"><i class="fas fa-clock me-1"></i>En retard</span> }
+              </div>
+            </div>
+          </div>
+
+          @if (p.description) { <p class="mt-3 mb-0">{{ p.description }}</p> }
+
+          <div class="row g-3 mt-2">
+            <div class="col-6 col-md-3"><div class="detail-tile"><small>Budget</small><strong>{{ p.budget | currency: 'TND' : 'symbol' : '1.0-0' }}</strong></div></div>
+            <div class="col-6 col-md-3"><div class="detail-tile"><small>Début</small><strong>{{ p.dateDebut ? (p.dateDebut | date: 'dd/MM/yyyy') : '—' }}</strong></div></div>
+            <div class="col-6 col-md-3">
+              <div class="detail-tile"><small>Fin prévue</small>
+                <strong [class.text-danger]="p.enRetard">{{ p.dateFinPrevue ? (p.dateFinPrevue | date: 'dd/MM/yyyy') : '—' }}</strong>
+              </div>
+            </div>
+            <div class="col-6 col-md-3"><div class="detail-tile"><small>Tâches</small><strong>{{ p.nbTachesTerminees }} / {{ p.nbTaches }}</strong></div></div>
+          </div>
+
+          <div class="mt-4">
+            <div class="d-flex justify-content-between small mb-1">
+              <span class="fw-semibold text-dark">Avancement</span>
+              <span>
+                <strong>{{ p.avancement }} %</strong>
+                @if (p.nbTaches) { <span class="text-muted"> · calculé à partir des tâches</span> }
+              </span>
+            </div>
+            <div class="progress" style="height: 10px">
+              <div class="progress-bar progress-bar-animated bg-{{ couleurAvancement(p) }}" [style.width.%]="p.avancement"></div>
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-4">
+            <span class="small fw-semibold text-dark me-1">Équipe :</span>
+            @for (m of p.membres; track m.id) {
+              <span class="member-chip"><span class="avatar avatar-xs bg-gradient-primary me-2">{{ initiales(m.nomComplet) }}</span>{{ m.nomComplet }}</span>
+            } @empty {
+              <span class="text-muted small">aucun collaborateur affecté</span>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Santé du projet -->
+    <div class="col-xl-4">
+      <div class="card h-100">
+        <div class="card-header bg-transparent">
+          <h6 class="text-uppercase text-muted ls-1 mb-1 small">Détection des risques</h6>
+          <h5 class="mb-0">Santé du projet</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center gap-4 mb-3">
+            <div class="health-gauge" [style.background]="jauge(p)">
+              <div class="health-gauge-inner">
+                <span class="health-score text-{{ niveaux[p.sante.niveau].color }}">{{ p.sante.score }}</span>
+                <small>/ 100</small>
+              </div>
+            </div>
+            <div>
+              <span class="badge badge-soft-{{ niveaux[p.sante.niveau].color }} fs-6">
+                <i class="fas {{ niveaux[p.sante.niveau].icon }} me-1"></i>{{ niveaux[p.sante.niveau].label }}
+              </span>
+              <p class="small text-muted mb-0 mt-2">Score calculé automatiquement à partir du planning, des tâches et de l'équipe.</p>
+            </div>
+          </div>
+          <ul class="health-reasons">
+            @for (r of p.sante.raisons; track r) {
+              <li [class.ok]="p.sante.niveau === 'SAIN'">
+                <i class="fas" [class.fa-circle-exclamation]="p.sante.niveau !== 'SAIN'" [class.fa-circle-check]="p.sante.niveau === 'SAIN'"></i>
+                {{ r }}
+              </li>
+            }
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Kanban ===== -->
+  <div class="d-flex align-items-center mb-3">
+    <h5 class="mb-0 text-dark"><i class="fas fa-table-columns text-primary me-2"></i>Tableau des tâches</h5>
+    @if (!peutGerer()) {
+      <span class="small text-muted ms-3"><i class="fas fa-lock me-1"></i>Lecture seule : seuls l'admin et l'équipe du projet modifient les tâches.</span>
+    } @else {
+      <span class="small text-muted ms-3 d-none d-md-inline">Glissez les cartes d'une colonne à l'autre.</span>
+    }
+  </div>
+
+  <div class="kanban" cdkDropListGroup>
+    @for (col of colonnesKanban; track col.value) {
+      <div class="kanban-col">
+        <div class="kanban-col-header">
+          <span><i class="fas {{ col.icon }} text-{{ col.color }} me-2"></i>{{ col.label }}</span>
+          <span class="badge bg-light text-dark">{{ colonnes()[col.value].length }}</span>
+          @if (peutGerer()) {
+            <button type="button" class="btn btn-sm btn-link ms-auto p-0" (click)="openCreate(col.value)" title="Ajouter une tâche">
+              <i class="fas fa-plus"></i>
+            </button>
+          }
+        </div>
+
+        <div class="kanban-list" cdkDropList [cdkDropListData]="colonnes()[col.value]"
+             [cdkDropListDisabled]="!peutGerer()" (cdkDropListDropped)="drop($event, col.value)">
+          @for (t of colonnes()[col.value]; track t.id) {
+            <div class="kanban-card" cdkDrag [cdkDragData]="t" (click)="openEdit(t)" [class.late]="t.enRetard"
+                 [class.done]="t.statut === 'TERMINEE'">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-soft-{{ priorites[t.priorite].color }}">{{ priorites[t.priorite].label }}</span>
+                @if (t.enRetard) { <span class="badge badge-soft-danger"><i class="fas fa-clock me-1"></i>En retard</span> }
+              </div>
+              <div class="kanban-title">{{ t.titre }}</div>
+              <div class="d-flex align-items-center mt-2 small text-muted">
+                @if (t.echeance) {
+                  <span [class.text-danger]="t.enRetard">
+                    <i class="far fa-calendar me-1"></i>{{ t.echeance | date: 'dd MMM' }}
+                    @if (t.statut !== 'TERMINEE' && joursRestants(t.echeance); as j) {
+                      @if (j > 0 && j <= 7) { <span class="text-warning">(J-{{ j }})</span> }
+                    }
+                  </span>
+                }
+                @if (t.assigne) {
+                  <span class="avatar avatar-xs bg-gradient-primary ms-auto" [title]="t.assigne.nomComplet">{{ initiales(t.assigne.nomComplet) }}</span>
+                } @else {
+                  <span class="avatar avatar-xs bg-gradient-secondary ms-auto" title="Non assignée"><i class="fas fa-user"></i></span>
+                }
+              </div>
+              <div *cdkDragPlaceholder class="kanban-placeholder"></div>
+            </div>
+          } @empty {
+            <div class="kanban-empty">Aucune tâche</div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- ===== Fenêtre tâche ===== -->
+  @if (modalOpen()) {
+    <div class="psm-modal-backdrop" (click)="modalOpen.set(false)">
+      <div class="psm-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+        <div class="psm-modal-header">
+          <h5 class="mb-0">
+            <i class="fas me-2 text-primary" [class.fa-pen]="editing()" [class.fa-plus]="!editing()"></i>
+            {{ editing() ? (peutGerer() ? 'Modifier la tâche' : 'Détail de la tâche') : 'Nouvelle tâche' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="modalOpen.set(false)" aria-label="Fermer"></button>
+        </div>
+        <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+          <fieldset class="psm-modal-body" [disabled]="!peutGerer()">
+            <div class="row g-3">
+              <div class="col-12">
+                <label class="form-label">Titre *</label>
+                <input class="form-control" formControlName="titre" [class.is-invalid]="invalid('titre')" placeholder="Ex. Intégrer le paiement en ligne">
+                <div class="invalid-feedback">Le titre est obligatoire.</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Colonne</label>
+                <select class="form-select" formControlName="statut">
+                  @for (c of colonnesKanban; track c.value) { <option [ngValue]="c.value">{{ c.label }}</option> }
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Priorité</label>
+                <select class="form-select" formControlName="priorite">
+                  @for (pr of listePriorites; track pr) { <option [ngValue]="pr">{{ priorites[pr].label }}</option> }
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Échéance</label>
+                <input class="form-control" type="date" formControlName="echeance">
+              </div>
+              <div class="col-12">
+                <label class="form-label">Responsable</label>
+                <select class="form-select" formControlName="assigneId">
+                  <option [ngValue]="null">— Non assignée —</option>
+                  @for (m of p.membres; track m.id) { <option [ngValue]="m.id">{{ m.nomComplet }}</option> }
+                </select>
+                @if (!p.membres.length) {
+                  <small class="text-muted">Ajoutez d'abord des collaborateurs à l'équipe du projet (page Projets → Modifier).</small>
+                }
+              </div>
+              <div class="col-12">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" rows="3" formControlName="description" placeholder="Détails, critères de réussite…"></textarea>
+              </div>
+            </div>
+          </fieldset>
+          <div class="psm-modal-footer">
+            @if (editing(); as t) {
+              @if (auth.isAdmin()) {
+                <button type="button" class="btn btn-soft-danger me-auto" (click)="remove(t)"><i class="fas fa-trash me-1"></i>Supprimer</button>
+              }
+            }
+            <button type="button" class="btn btn-light" (click)="modalOpen.set(false)">{{ peutGerer() ? 'Annuler' : 'Fermer' }}</button>
+            @if (peutGerer()) {
+              <button type="submit" class="btn btn-primary" [disabled]="saving()">
+                @if (saving()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                {{ editing() ? 'Enregistrer' : 'Ajouter' }}
+              </button>
+            }
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+}

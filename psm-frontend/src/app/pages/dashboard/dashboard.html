@@ -112,6 +112,105 @@
   </div>
 </div>
 
+<!-- Détection des risques : santé du portefeuille + projets à surveiller -->
+<div class="card mb-4">
+  <div class="card-header d-flex flex-wrap align-items-center gap-3">
+    <div>
+      <h6 class="text-uppercase text-muted ls-1 mb-1 small">Détection automatique des risques</h6>
+      <h5 class="mb-0">Projets à risque</h5>
+    </div>
+    @if (stats(); as s) {
+      <div class="ms-auto d-flex flex-wrap gap-2">
+        <span class="badge badge-soft-primary fs-6"><i class="fas fa-heart-pulse me-1"></i>Santé moyenne : {{ s.santeMoyenne }}/100</span>
+        <span class="badge badge-soft-danger fs-6"><i class="fas fa-fire me-1"></i>{{ s.nbProjetsCritiques }} critique(s)</span>
+        <span class="badge badge-soft-warning fs-6"><i class="fas fa-triangle-exclamation me-1"></i>{{ s.nbProjetsASurveiller }} à surveiller</span>
+      </div>
+    }
+  </div>
+  <div class="card-body">
+    @for (r of stats()?.projetsARisque ?? []; track r.id) {
+      <a [routerLink]="['/projets', r.id]" class="risk-row">
+        <span class="risk-score bg-{{ niveaux[r.niveau].color }}">{{ r.score }}</span>
+        <div class="flex-fill min-w-0">
+          <div class="fw-semibold text-dark text-truncate">{{ r.libelle }} <small class="text-muted fw-normal">· {{ r.nomClient }}</small></div>
+          <div class="small text-muted text-truncate">{{ r.raisons.join(' · ') }}</div>
+        </div>
+        <span class="badge badge-soft-{{ niveaux[r.niveau].color }} d-none d-md-inline">{{ niveaux[r.niveau].label }}</span>
+        <i class="fas fa-chevron-right text-muted ms-2"></i>
+      </a>
+    } @empty {
+      @if (stats()) {
+        <p class="text-center text-muted mb-0 py-3"><i class="fas fa-circle-check text-success me-1"></i>Aucun projet à risque : tout est sous contrôle.</p>
+      }
+    }
+  </div>
+</div>
+
+<!-- Suivi des projets : retards, avancement, mes projets -->
+<div class="row g-4 mb-4">
+  <div class="col-xl-4">
+    <div class="d-flex flex-column gap-4 h-100">
+      <a routerLink="/projets" [queryParams]="{ enRetard: true }" class="card card-stats shortcut">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title-sm">Projets en retard</h6>
+              <span class="stat-value" [class.text-danger]="(stats()?.projetsEnRetard ?? 0) > 0">{{ stats()?.projetsEnRetard ?? '—' }}</span>
+            </div>
+            <div class="icon-shape bg-gradient-red text-white"><i class="fas fa-triangle-exclamation"></i></div>
+          </div>
+          <p class="mt-3 mb-0 small text-muted">Fin prévue dépassée, projet non terminé</p>
+        </div>
+      </a>
+      <div class="card card-stats">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title-sm">Avancement moyen</h6>
+              <span class="stat-value">{{ stats()?.avancementMoyen ?? '—' }}%</span>
+            </div>
+            <div class="icon-shape bg-gradient-info text-white"><i class="fas fa-bars-progress"></i></div>
+          </div>
+          <div class="progress mt-3" style="height: 6px">
+            <div class="progress-bar bg-info" [style.width.%]="stats()?.avancementMoyen ?? 0"></div>
+          </div>
+          <p class="mt-2 mb-0 small text-muted">Projets en cours</p>
+        </div>
+      </div>
+      <a routerLink="/projets" [queryParams]="{ mesProjets: true }" class="card card-stats shortcut">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h6 class="card-title-sm">Mes projets</h6>
+              <span class="stat-value">{{ stats()?.mesProjets ?? '—' }}</span>
+            </div>
+            <div class="icon-shape bg-gradient-primary text-white"><i class="fas fa-user-check"></i></div>
+          </div>
+          <p class="mt-3 mb-0 small text-muted">Projets auxquels vous êtes affecté(e)</p>
+        </div>
+      </a>
+    </div>
+  </div>
+  <div class="col-xl-8">
+    <div class="card h-100">
+      <div class="card-header bg-transparent">
+        <h6 class="text-uppercase text-muted ls-1 mb-1 small">Suivi</h6>
+        <h5 class="mb-0">Avancement des projets en cours</h5>
+      </div>
+      <div class="card-body">
+        <div class="chart-box"><canvas #avancementCanvas></canvas></div>
+        @if (stats() && !stats()!.avancements.length) {
+          <p class="text-center text-muted small mb-0">Aucun projet en cours.</p>
+        }
+        <p class="small text-muted mb-0 mt-2">
+          <span class="legend-dot bg-danger"></span>en retard
+          <span class="legend-dot bg-primary ms-3"></span>dans les temps
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Derniers projets -->
 <div class="card mb-4">
   <div class="card-header d-flex align-items-center">

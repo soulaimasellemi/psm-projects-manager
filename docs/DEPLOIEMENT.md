@@ -84,7 +84,12 @@ ADMIN_NOTIFY_EMAIL=votre.adresse@gmail.com
 FRONTEND_URL=http://VOTRE_IP
 CORS_ORIGINS=http://VOTRE_IP
 JWT_SECRET=COLLEZ_ICI_LE_RESULTAT_DE_LA_COMMANDE_CI-DESSOUS
+INIT_ADMIN_EMAIL=votre.adresse@gmail.com
+INIT_ADMIN_PASSWORD=UnAutreMotDePasseSolide!2026
+DEMO_DATA=false
 ```
+
+`INIT_ADMIN_EMAIL` / `INIT_ADMIN_PASSWORD` créent votre compte administrateur au premier démarrage (actif, rôle ADMIN). Changez ensuite ce mot de passe depuis la page **Mon profil**. `DEMO_DATA=false` évite de créer les comptes de démonstration (`admin@smartsoft.tn` / `Admin@123`), dont le mot de passe est public.
 
 Générez une clé JWT propre au serveur, puis collez-la dans `JWT_SECRET` :
 

@@ -47,10 +47,14 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Public : login / register
+                // Public : login / register / mot de passe oublié
                 .requestMatchers("/api/auth/**").permitAll()
                 // Profil de l'utilisateur connecté
                 .requestMatchers("/api/users/me", "/api/users/me/**").authenticated()
+                // Liste des collaborateurs à affecter aux projets
+                .requestMatchers(HttpMethod.GET, "/api/users/options").hasAnyRole(ADMIN, COLLAB)
+                // Historique des actions : admin uniquement
+                .requestMatchers("/api/activites/**").hasRole(ADMIN)
                 // Gestion des utilisateurs : admin uniquement
                 .requestMatchers("/api/users/**").hasRole(ADMIN)
                 // Clients & projets
@@ -58,6 +62,9 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, RESSOURCES).hasAnyRole(ADMIN, COLLAB)
                 .requestMatchers(HttpMethod.PUT, RESSOURCES).hasRole(ADMIN)
                 .requestMatchers(HttpMethod.DELETE, RESSOURCES).hasRole(ADMIN)
+                // Tâches du Kanban : modifier / déplacer = admin ou membre du projet (vérifié dans TacheService)
+                .requestMatchers(HttpMethod.PUT, "/api/taches/**").hasAnyRole(ADMIN, COLLAB)
+                .requestMatchers(HttpMethod.DELETE, "/api/taches/**").hasRole(ADMIN)
                 // Statistiques du dashboard
                 .requestMatchers(HttpMethod.GET, "/api/stats/**").hasAnyRole(ADMIN, COLLAB)
                 // Tout autre endpoint d'API nécessite d'être connecté

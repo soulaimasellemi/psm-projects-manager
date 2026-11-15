@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { ClientService } from '../../core/services/api.services';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Client, Page, SECTEURS, initiales } from '../../core/models';
+import { Client, ExportFormat, Page, SECTEURS, initiales } from '../../core/models';
 import { HasRole } from '../../shared/has-role.directive';
 import { Pagination } from '../../shared/pagination/pagination';
 
@@ -30,6 +30,7 @@ export class Clients implements OnInit {
   readonly editing = signal<Client | null>(null);
   readonly saving = signal(false);
   readonly submitted = signal(false);
+  readonly exporting = signal<ExportFormat | null>(null);
 
   private q = '';
   private page = 0;
@@ -69,6 +70,21 @@ export class Clients implements OnInit {
       this.page = 0;
       this.load();
     }, 350);
+  }
+
+  /** Export Excel / PDF de la liste (avec la recherche en cours) */
+  exporter(format: ExportFormat) {
+    this.exporting.set(format);
+    this.service.export(format, this.q).subscribe({
+      next: () => {
+        this.exporting.set(null);
+        this.toast.success(`Export ${format === 'pdf' ? 'PDF' : 'Excel'} téléchargé.`);
+      },
+      error: (e) => {
+        this.exporting.set(null);
+        this.toast.apiError(e, "Impossible d'exporter les clients.");
+      },
+    });
   }
 
   goTo(p: number) {

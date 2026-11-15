@@ -2,6 +2,7 @@ package com.smartsoft.psm.dto;
 
 import com.smartsoft.psm.entity.Role;
 import com.smartsoft.psm.entity.User;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -32,6 +33,16 @@ public record UserDto(Long id, String email, String tel, String nom, String pren
             @NotBlank @Size(min = 6, message = "Le nouveau mot de passe doit contenir au moins 6 caractères") String nouveau) {}
 
     public record StatutRequest(@NotNull Boolean enabled) {}
+
+    /** Création directe d'un compte par l'ADMIN (compte actif, mot de passe haché en BCrypt). */
+    public record CreateUserRequest(
+            @NotBlank(message = "L'email est obligatoire") @Email(message = "Email invalide") String email,
+            @NotBlank(message = "Le mot de passe est obligatoire")
+            @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères") String password,
+            @Size(max = 30) String tel,
+            @NotBlank(message = "Le nom est obligatoire") @Size(max = 80) String nom,
+            @NotBlank(message = "Le prénom est obligatoire") @Size(max = 80) String prenom,
+            @NotEmpty(message = "Au moins un rôle est requis") Set<String> roles) {}
 
     public record RolesRequest(@NotEmpty(message = "Au moins un rôle est requis") Set<String> roles) {}
 }

@@ -10,6 +10,19 @@
         <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
         <input class="form-control" placeholder="Nom, email, secteur, ville…" (input)="onSearch($any($event.target).value)">
       </div>
+      <!-- Export de la liste (recherche en cours) -->
+      <div class="btn-group">
+        <button class="btn btn-light" type="button" (click)="exporter('xlsx')" [disabled]="exporting()" title="Exporter en Excel">
+          @if (exporting() === 'xlsx') { <span class="spinner-border spinner-border-sm me-1"></span> }
+          @else { <i class="fas fa-file-excel text-success me-1"></i> }
+          Excel
+        </button>
+        <button class="btn btn-light" type="button" (click)="exporter('pdf')" [disabled]="exporting()" title="Exporter en PDF">
+          @if (exporting() === 'pdf') { <span class="spinner-border spinner-border-sm me-1"></span> }
+          @else { <i class="fas fa-file-pdf text-danger me-1"></i> }
+          PDF
+        </button>
+      </div>
       <!-- Admin ET collaborateur peuvent ajouter -->
       <button class="btn btn-primary" type="button" (click)="openCreate()">
         <i class="fas fa-plus me-1"></i> Nouveau client

@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserService } from '../../core/services/api.services';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -9,12 +10,13 @@ import { Pagination } from '../../shared/pagination/pagination';
 /** Gestion des utilisateurs (page réservée à l'ADMIN via RoleGuard) */
 @Component({
   selector: 'app-users',
-  imports: [DatePipe, Pagination],
+  imports: [DatePipe, ReactiveFormsModule, Pagination],
   templateUrl: './users.html',
 })
 export class Users implements OnInit {
   private service = inject(UserService);
   private toast = inject(ToastService);
+  private fb = inject(FormBuilder);
   auth = inject(AuthService);
 
   readonly initiales = initiales;
@@ -26,6 +28,20 @@ export class Users implements OnInit {
   readonly filtre = signal<'tous' | 'attente' | 'actifs'>('tous');
   readonly rolesUser = signal<User | null>(null);
   readonly rolesSelection = signal<RoleName[]>([]);
+
+  // Création d'un compte (POST /api/users)
+  readonly createOpen = signal(false);
+  readonly createSubmitted = signal(false);
+  readonly creating = signal(false);
+  readonly createRoles = signal<RoleName[]>(['COLLABORATEUR']);
+  readonly showPassword = signal(false);
+  createForm = this.fb.nonNullable.group({
+    prenom: ['', [Validators.required, Validators.maxLength(80)]],
+    nom: ['', [Validators.required, Validators.maxLength(80)]],
+    email: ['', [Validators.required, Validators.email]],
+    tel: ['', Validators.maxLength(30)],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+  });
 
   private q = '';
   private page = 0;
@@ -108,6 +124,42 @@ export class Users implements OnInit {
         this.load();
       },
       error: (e) => this.toast.apiError(e),
+    });
+  }
+
+  openCreate() {
+    this.createForm.reset();
+    this.createRoles.set(['COLLABORATEUR']);
+    this.createSubmitted.set(false);
+    this.showPassword.set(false);
+    this.createOpen.set(true);
+  }
+
+  toggleCreateRole(r: RoleName) {
+    this.createRoles.update((list) => (list.includes(r) ? list.filter((x) => x !== r) : [...list, r]));
+  }
+
+  createInvalid(name: 'prenom' | 'nom' | 'email' | 'tel' | 'password') {
+    return this.createSubmitted() && this.createForm.controls[name].invalid;
+  }
+
+  create() {
+    this.createSubmitted.set(true);
+    if (this.createForm.invalid || this.createRoles().length === 0) return;
+    this.creating.set(true);
+    this.service.create({ ...this.createForm.getRawValue(), roles: this.createRoles() }).subscribe({
+      next: (u) => {
+        this.creating.set(false);
+        this.createOpen.set(false);
+        const role = u.roles.includes('ADMIN') ? 'administrateur' : 'collaborateur';
+        this.toast.success(`Compte ${role} de ${u.prenom} ${u.nom} créé (actif).`);
+        this.page = 0;
+        this.load();
+      },
+      error: (e) => {
+        this.creating.set(false);
+        this.toast.apiError(e);
+      },
     });
   }
 

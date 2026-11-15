@@ -37,6 +37,16 @@ export class AuthService {
     return this.http.post<{ message: string }>(`${this.api}/register`, data);
   }
 
+  /** Mot de passe oublié, étape 1 : demande du lien par email */
+  forgotPassword(email: string) {
+    return this.http.post<{ message: string }>(`${this.api}/forgot-password`, { email });
+  }
+
+  /** Mot de passe oublié, étape 2 : nouveau mot de passe avec le jeton du lien */
+  resetPassword(token: string, password: string) {
+    return this.http.post<{ message: string }>(`${this.api}/reset-password`, { token, password });
+  }
+
   logout(redirect = true) {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
