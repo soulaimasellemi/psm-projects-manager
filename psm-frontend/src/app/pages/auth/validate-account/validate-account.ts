@@ -1,3 +1,4 @@
+import { ThemeToggle } from '../../../shared/theme-toggle/theme-toggle';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,7 +11,7 @@ import { apiMessage } from '../../../core/services/toast.service';
  */
 @Component({
   selector: 'app-validate-account',
-  imports: [RouterLink],
+  imports: [ThemeToggle, RouterLink],
   templateUrl: './validate-account.html',
 })
 export class ValidateAccount implements OnInit {

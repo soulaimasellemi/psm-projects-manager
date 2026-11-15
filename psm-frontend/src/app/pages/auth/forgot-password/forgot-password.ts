@@ -1,3 +1,4 @@
+import { ThemeToggle } from '../../../shared/theme-toggle/theme-toggle';
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -7,7 +8,7 @@ import { apiMessage } from '../../../core/services/toast.service';
 /** Mot de passe oublié, étape 1 : saisie de l'email, envoi du lien de réinitialisation */
 @Component({
   selector: 'app-forgot-password',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ThemeToggle, ReactiveFormsModule, RouterLink],
   templateUrl: './forgot-password.html',
 })
 export class ForgotPassword {

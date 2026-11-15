@@ -1,3 +1,4 @@
+import { ThemeToggle } from '../../../shared/theme-toggle/theme-toggle';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -13,7 +14,7 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
 /** Mot de passe oublié, étape 2 : lien reçu par email (?token=...) -> nouveau mot de passe */
 @Component({
   selector: 'app-reset-password',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ThemeToggle, ReactiveFormsModule, RouterLink],
   templateUrl: './reset-password.html',
 })
 export class ResetPassword implements OnInit {

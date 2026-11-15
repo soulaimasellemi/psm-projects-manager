@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, RegisterRequest, RoleName, User } from '../models';
+import { PreferencesService } from './preferences.service';
 
 const TOKEN_KEY = 'psm_token';
 const USER_KEY = 'psm_user';
@@ -12,6 +13,7 @@ const USER_KEY = 'psm_user';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private prefs = inject(PreferencesService);
   private readonly api = `${environment.apiUrl}/auth`;
 
   private readonly _user = signal<User | null>(this.readUser());
@@ -22,6 +24,11 @@ export class AuthService {
     const u = this._user();
     return u ? `${u.prenom} ${u.nom}` : '';
   });
+
+  constructor() {
+    // Déjà connecté (rechargement de la page) : les changements de préférences iront sur le compte
+    this.prefs.connecte = this.isLoggedIn();
+  }
 
   get token(): string | null {
     return localStorage.getItem(TOKEN_KEY);
@@ -56,6 +63,7 @@ export class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this._user.set(null);
+    this.prefs.connecte = false;
     if (redirect) this.router.navigate(['/login']);
   }
 
@@ -79,6 +87,9 @@ export class AuthService {
   private store(res: AuthResponse) {
     localStorage.setItem(TOKEN_KEY, res.token);
     this.updateUser(res.user);
+    // Thème et dashboard enregistrés sur le compte (retrouvés sur n'importe quel ordinateur)
+    this.prefs.connecte = true;
+    this.prefs.chargerDuCompte(res.user.preferences);
   }
 
   private readUser(): User | null {

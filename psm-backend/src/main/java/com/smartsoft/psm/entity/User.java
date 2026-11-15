@@ -49,6 +49,10 @@ public class User implements UserDetails {
 
     private LocalDateTime resetTokenExpiration;
 
+    /** Préférences d'affichage (thème, blocs du dashboard), au format JSON */
+    @Column(length = 2000)
+    private String preferences;
+
     /** Validation de l'inscription en un clic depuis l'email de l'admin (empreinte SHA-256 du jeton) */
     @Column(length = 64)
     private String validationTokenHash;
@@ -113,6 +117,8 @@ public class User implements UserDetails {
     public LocalDateTime getResetTokenExpiration() { return resetTokenExpiration; }
     public void setResetTokenExpiration(LocalDateTime resetTokenExpiration) { this.resetTokenExpiration = resetTokenExpiration; }
 
+    public String getPreferences() { return preferences; }
+    public void setPreferences(String preferences) { this.preferences = preferences; }
     public String getValidationTokenHash() { return validationTokenHash; }
     public LocalDateTime getValidationTokenExpiration() { return validationTokenExpiration; }
 

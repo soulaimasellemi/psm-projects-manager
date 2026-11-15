@@ -199,6 +199,7 @@ Ouvrez **http://localhost:4200**. Sur la page de connexion, les boutons « Admin
 * **Historique des actions** (page admin) : connexions, créations, modifications, suppressions, validations, avec recherche et filtres.
 * **Tableau Kanban par projet** (page `/projets/:id`) : tâches À faire / En cours / Terminée, glisser-déposer (Angular CDK), priorité, échéance, responsable choisi dans l'équipe. **L'avancement du projet est calculé automatiquement** à partir des tâches terminées. Droits : admin = tout ; collaborateur = tâches des projets dont il est membre ; suppression = admin.
 * **Détection automatique des risques** : chaque projet a un score de santé sur 100 (Sain / À surveiller / Critique) avec les raisons (fin dépassée, avancement en retard sur le temps écoulé, échéance proche, tâches en retard, tâches urgentes sans responsable, projet sans équipe). Le dashboard liste les projets à risque. Règles détaillées dans `SanteDto.java`.
+* **Mode sombre et dashboard personnalisable** : bouton lune / soleil (Bootstrap `data-bs-theme`), blocs du tableau de bord à afficher, masquer et réordonner par glisser-déposer. Préférences enregistrées **sur le compte** (`PUT /api/users/me/preferences`), retrouvées sur n'importe quel ordinateur.
 * **Mot de passe oublié** : lien de réinitialisation par email, jeton aléatoire stocké haché (SHA-256), valable 30 minutes et à usage unique.
 
 ---

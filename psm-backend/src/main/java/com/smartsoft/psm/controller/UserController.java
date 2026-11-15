@@ -2,6 +2,7 @@ package com.smartsoft.psm.controller;
 
 import com.smartsoft.psm.dto.AuthDtos.MessageResponse;
 import com.smartsoft.psm.dto.PageResponse;
+import com.smartsoft.psm.dto.PreferencesDto;
 import com.smartsoft.psm.dto.ProjetDto;
 import com.smartsoft.psm.dto.UserDto;
 import java.util.List;
@@ -38,6 +39,12 @@ public class UserController {
     @PutMapping("/me")
     public UserDto updateMe(@AuthenticationPrincipal User current, @Valid @RequestBody ProfilRequest req) {
         return userService.updateProfil(current.getId(), req);
+    }
+
+    /** Thème (clair / sombre) et disposition du dashboard, enregistrés sur le compte */
+    @PutMapping("/me/preferences")
+    public UserDto updatePreferences(@AuthenticationPrincipal User current, @Valid @RequestBody PreferencesDto req) {
+        return userService.updatePreferences(current.getId(), req);
     }
 
     @PutMapping("/me/password")

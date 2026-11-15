@@ -10,6 +10,20 @@ export interface User {
   enabled: boolean;
   roles: RoleName[];
   dateCreation?: string;
+  preferences?: Preferences | null;
+}
+
+// ---------- Préférences d'affichage (enregistrées sur le compte) ----------
+export type Theme = 'light' | 'dark';
+
+export interface WidgetPref {
+  id: string;
+  visible: boolean;
+}
+
+export interface Preferences {
+  theme: Theme;
+  dashboard: WidgetPref[];
 }
 
 export interface AuthResponse {

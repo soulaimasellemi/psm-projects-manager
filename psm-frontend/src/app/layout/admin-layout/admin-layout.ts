@@ -4,6 +4,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { RoleName, initiales } from '../../core/models';
+import { ThemeToggle } from '../../shared/theme-toggle/theme-toggle';
 
 interface NavItem {
   path: string;
@@ -15,7 +16,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ThemeToggle],
   templateUrl: './admin-layout.html',
 })
 export class AdminLayout {

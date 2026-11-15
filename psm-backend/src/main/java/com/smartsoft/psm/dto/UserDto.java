@@ -1,5 +1,6 @@
 package com.smartsoft.psm.dto;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartsoft.psm.entity.Role;
 import com.smartsoft.psm.entity.User;
 import jakarta.validation.constraints.Email;
@@ -14,13 +15,34 @@ import java.util.stream.Collectors;
 
 /** Représentation d'un utilisateur renvoyée par l'API (jamais le mot de passe). */
 public record UserDto(Long id, String email, String tel, String nom, String prenom,
-                      boolean enabled, Set<String> roles, LocalDateTime dateCreation) {
+                      boolean enabled, Set<String> roles, LocalDateTime dateCreation,
+                      PreferencesDto preferences) {
+
+    private static final ObjectMapper JSON = new ObjectMapper();
 
     public static UserDto from(User u) {
         return new UserDto(u.getId(), u.getEmail(), u.getTel(), u.getNom(), u.getPrenom(),
                 u.isEnabled(),
                 u.getRoles().stream().map(Role::getLibelle).collect(Collectors.toCollection(java.util.TreeSet::new)),
-                u.getDateCreation());
+                u.getDateCreation(), lirePreferences(u.getPreferences()));
+    }
+
+    /** JSON stocké en base -> objet (null si absent ou illisible : le frontend applique ses valeurs par défaut) */
+    public static PreferencesDto lirePreferences(String json) {
+        if (json == null || json.isBlank()) return null;
+        try {
+            return JSON.readValue(json, PreferencesDto.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String ecrirePreferences(PreferencesDto p) {
+        try {
+            return JSON.writeValueAsString(p);
+        } catch (Exception e) {
+            throw new IllegalStateException("Préférences illisibles", e);
+        }
     }
 
     public record ProfilRequest(

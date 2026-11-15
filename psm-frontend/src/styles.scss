@@ -254,6 +254,8 @@ a { text-decoration: none; }
   }
 }
 .table-hover > tbody > tr:hover > * { --bs-table-bg-state: #f6f9fc; }
+// Tableaux avec beaucoup de colonnes (liste des projets)
+.table.table-compact > :not(caption) > * > * { padding-left: 0.9rem; padding-right: 0.9rem; }
 .row-pending > td { background: rgba($warning, 0.04) !important; }
 
 // ---------- Formulaires ----------
@@ -434,3 +436,137 @@ a { text-decoration: none; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes fadeDown { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
 @keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: none; } }
+
+// =====================================================================
+//  Mode sombre (Bootstrap 5.3 : data-bs-theme="dark" sur <html>)
+//  Bootstrap adapte ses composants ; on adapte ici le thème Argon.
+// =====================================================================
+$d-bg: #0f1626;
+$d-surface: #1a2238;
+$d-surface-2: #222c46;
+$d-border: #2e3a59;
+$d-text: #c4cbe0;
+$d-heading: #eef1fa;
+$d-muted: #8a94b0;
+
+body, .card, .sidenav, .psm-modal, .kanban-col, .kanban-card, .detail-tile, .user-menu {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+:root[data-bs-theme='dark'] {
+  --bs-body-color: #{$d-text};
+  --bs-body-bg: #{$d-bg};
+  --bs-border-color: #{$d-border};
+  --bs-secondary-bg: #{$d-surface-2};
+  --bs-tertiary-bg: #{$d-surface-2};
+  color-scheme: dark;
+
+  body { background: $d-bg; color: $d-text; }
+  h1, h2, h3, h4, h5, h6, .text-dark { color: $d-heading !important; }
+  .text-muted { color: $d-muted !important; }
+  .welcome h2 { color: #fff !important; }
+
+  // Bandeau et page : dégradé plus profond
+  .header-band { background: linear-gradient(87deg, #3a4bb8 0, #5a3fb3 100%); }
+
+  // Cartes
+  .card { background: $d-surface; box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.35); }
+  .card .card-header, .card .card-footer { background: $d-surface; border-color: $d-border; }
+  .card.bg-gradient-default { background: linear-gradient(87deg, #0b1020 0, #151236 100%) !important; }
+  .card-stats .stat-value { color: $d-heading; }
+  .detail-tile { background: $d-surface-2; }
+  .alert-secondary-soft { background: $d-surface; color: $d-text; }
+
+  // Menu latéral et menu utilisateur
+  .sidenav { background: $d-surface; box-shadow: 0 0 2rem 0 rgba(0, 0, 0, 0.4); }
+  .sidenav hr { border-color: $d-border; opacity: 1; }
+  .sidenav-brand .brand-name { color: $d-heading; }
+  .sidenav-nav a {
+    color: $d-text;
+    &:hover { color: #fff; background: $d-surface-2; }
+    &.active { color: #fff; background: $d-surface-2; }
+  }
+  .user-menu {
+    background: $d-surface; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    a, button { color: $d-text; &:hover { background: $d-surface-2; } }
+  }
+  .dropdown-divider { border-color: $d-border; }
+
+  // Tableaux
+  .table {
+    --bs-table-color: #{$d-text};
+    --bs-table-bg: transparent;
+    > :not(caption) > * > * { border-bottom-color: $d-border; }
+    .thead-light th { background: $d-surface-2; color: $d-muted; border-bottom-color: $d-border; }
+  }
+  .table-hover > tbody > tr:hover > * { --bs-table-bg-state: #{$d-surface-2}; color: $d-heading; }
+  .badge-dot { color: $d-text; }
+  .project-link { color: $d-heading !important; }
+
+  // Formulaires
+  .form-label { color: $d-heading; }
+  .form-control, .form-select { background-color: $d-surface-2; border-color: $d-border; color: $d-heading; }
+  .form-control::placeholder { color: $d-muted; }
+  .input-group-text { background-color: $d-surface-2; border-color: $d-border; color: $d-muted; }
+  .input-group-alternative { background: $d-surface-2; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+  .input-group-alternative .form-control, .input-group-alternative .input-group-text { background: transparent; }
+  .role-option, .member-option { border-color: $d-border; &.selected { background: rgba($primary, 0.18); border-color: $primary; } }
+  .member-chip { background: $d-surface-2; color: $d-text; }
+
+  // Boutons clairs
+  .btn-light { --bs-btn-bg: #{$d-surface-2}; --bs-btn-border-color: #{$d-surface-2}; --bs-btn-color: #{$d-text};
+    --bs-btn-hover-bg: #{$d-border}; --bs-btn-hover-border-color: #{$d-border}; --bs-btn-hover-color: #fff;
+    --bs-btn-disabled-bg: #{$d-surface-2}; --bs-btn-disabled-border-color: #{$d-surface-2}; }
+  .bg-light { background-color: $d-surface-2 !important; }
+  .pagination-psm .page-link { background: $d-surface; border-color: $d-border; color: $d-muted; }
+
+  // Fenêtres
+  .psm-modal { background: $d-surface; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); }
+  .psm-modal-header { border-color: $d-border; }
+  .psm-modal-footer { background: $d-surface-2; border-color: $d-border; }
+  .psm-modal-backdrop { background: rgba(0, 0, 0, 0.65); }
+
+  // Kanban
+  .kanban-col { background: #141b2e; }
+  .kanban-col-header { color: $d-heading; }
+  .kanban-card { background: $d-surface-2; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4); }
+  .kanban-title { color: $d-heading; }
+  .kanban-card.done .kanban-title { color: $d-muted; }
+  .kanban-empty { border-color: $d-border; }
+
+  // Santé et risques
+  .health-gauge-inner { background: $d-surface; }
+  .health-reasons li { color: $d-text; background: rgba($danger, 0.12); &.ok { background: rgba($success, 0.12); } }
+  .risk-row { & + & { border-color: $d-border; } &:hover { background: $d-surface-2; } }
+  .row-pending > td { background: rgba($warning, 0.08) !important; }
+  .avatar-group .avatar { border-color: $d-surface; }
+
+  // Pages de connexion
+  .auth-page { background: #0b1020; }
+  .auth-separator svg { fill: #0b1020; }
+  .auth-card { background: $d-surface; }
+  .auth-card .card-header { border-color: $d-border; }
+}
+
+// Bouton de changement de thème (barre du haut et pages de connexion)
+.theme-toggle {
+  width: 38px; height: 38px; border-radius: 50%; border: 0; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, 0.15); color: #fff; transition: background 0.2s ease, transform 0.3s ease;
+  &:hover { background: rgba(255, 255, 255, 0.28); transform: rotate(20deg); }
+}
+.theme-toggle-floating { position: fixed; top: 1rem; right: 1rem; z-index: 1100; }
+
+// Personnalisation du dashboard
+.widget-option {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0.9rem; margin-bottom: 0.5rem;
+  border: 1px solid $border; border-radius: 0.5rem; background: #fff; cursor: grab;
+  &.masque { opacity: 0.55; }
+  .widget-handle { color: $muted; }
+  .form-switch { margin-left: auto; }
+}
+:root[data-bs-theme='dark'] .widget-option { background: $d-surface-2; border-color: $d-border; }
+.widget-option.cdk-drag-preview { box-shadow: 0 12px 28px rgba(50, 50, 93, 0.3); }
+.widgets-list.cdk-drop-list-dragging .widget-option:not(.cdk-drag-placeholder) { transition: transform 200ms cubic-bezier(0, 0, 0.2, 1); }
+.widget-option.cdk-drag-placeholder { opacity: 0.3; }
+.dashboard-bloc { animation: fadeDown 0.25s ease; }

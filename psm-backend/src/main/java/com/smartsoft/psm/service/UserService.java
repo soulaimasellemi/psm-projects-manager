@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import com.smartsoft.psm.dto.PreferencesDto;
 import com.smartsoft.psm.dto.ProjetDto;
 import com.smartsoft.psm.entity.Activite.Action;
 import com.smartsoft.psm.entity.Activite.Cible;
@@ -145,6 +146,15 @@ public class UserService {
         u.setNom(req.nom().trim());
         u.setPrenom(req.prenom().trim());
         u.setTel(ClientService.blankToNull(req.tel()));
+        return UserDto.from(u);
+    }
+
+    /** Enregistre le thème et la disposition du dashboard de l'utilisateur connecté */
+    public UserDto updatePreferences(Long id, PreferencesDto prefs) {
+        User u = getEntity(id);
+        String json = UserDto.ecrirePreferences(prefs);
+        if (json.length() > 2000) throw ApiException.badRequest("Préférences trop volumineuses.");
+        u.setPreferences(json);
         return UserDto.from(u);
     }
 

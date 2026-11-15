@@ -46,7 +46,8 @@
     </button>
     <h4 class="topbar-title mb-0">{{ title() }}</h4>
 
-    <div class="ms-auto position-relative">
+    <app-theme-toggle class="ms-auto me-3" />
+    <div class="position-relative">
       <button class="user-chip" type="button" (click)="menuOpen.set(!menuOpen())">
         <span class="avatar avatar-sm bg-gradient-white text-primary">{{ initiales() }}</span>
         <span class="d-none d-md-inline ms-2 fw-semibold">{{ auth.displayName() }}</span>
