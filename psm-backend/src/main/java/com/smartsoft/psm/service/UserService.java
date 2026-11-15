@@ -89,6 +89,7 @@ public class UserService {
         User u = getEntity(id);
         boolean activation = !u.isEnabled() && enabled;
         u.setEnabled(enabled);
+        if (enabled) u.effacerJetonValidation(); // le lien de l'email admin ne sert plus
         if (activation) emailService.notifierActivation(u);
         activiteService.enregistrer(enabled ? Action.VALIDATION : Action.MODIFICATION, Cible.UTILISATEUR, id,
                 (enabled ? "Compte activé : " : "Compte désactivé : ") + u.getNomComplet() + " (" + u.getEmail() + ")");

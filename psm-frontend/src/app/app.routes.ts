@@ -23,6 +23,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
   },
   {
+    // Lien "Valider le compte" de l'email reçu par l'admin : /valider-compte?token=...
+    path: 'valider-compte',
+    title: 'Valider une inscription | PSM',
+    loadComponent: () => import('./pages/auth/validate-account/validate-account').then((m) => m.ValidateAccount),
+  },
+  {
     // Lien reçu par email : /reinitialiser-mot-de-passe?token=...
     path: 'reinitialiser-mot-de-passe',
     title: 'Nouveau mot de passe | PSM',

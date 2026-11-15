@@ -32,6 +32,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByResetTokenHash(String resetTokenHash);
 
+    Optional<User> findByValidationTokenHash(String validationTokenHash);
+
     @Query("select u from User u join u.roles r where r.libelle = :libelle and u.enabled = true")
     List<User> findActiveByRole(@Param("libelle") String libelle);
 }

@@ -3,6 +3,7 @@ package com.smartsoft.psm.controller;
 import com.smartsoft.psm.dto.AuthDtos.AuthResponse;
 import com.smartsoft.psm.dto.AuthDtos.ForgotPasswordRequest;
 import com.smartsoft.psm.dto.AuthDtos.ResetPasswordRequest;
+import com.smartsoft.psm.dto.AuthDtos.ValidationRequest;
 import com.smartsoft.psm.dto.AuthDtos.LoginRequest;
 import com.smartsoft.psm.dto.AuthDtos.MessageResponse;
 import com.smartsoft.psm.dto.AuthDtos.RegisterRequest;
@@ -41,6 +42,16 @@ public class AuthController {
     public MessageResponse resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
         authService.reinitialiser(req.token(), req.password());
         return new MessageResponse("Votre mot de passe a été modifié. Vous pouvez maintenant vous connecter.");
+    }
+
+    /**
+     * POST /api/auth/validate-account -> active le compte avec le jeton du lien reçu par l'admin.
+     * (POST et non GET : un logiciel qui "prévisualise" les liens d'un email ne peut pas valider un compte)
+     */
+    @PostMapping("/validate-account")
+    public MessageResponse validateAccount(@Valid @RequestBody ValidationRequest req) {
+        String nom = authService.validerParLien(req.token());
+        return new MessageResponse("Le compte de " + nom + " est activé. Un email lui a été envoyé pour se connecter.");
     }
 
     /** POST /api/auth/register -> compte créé inactif + email envoyé à l'admin */

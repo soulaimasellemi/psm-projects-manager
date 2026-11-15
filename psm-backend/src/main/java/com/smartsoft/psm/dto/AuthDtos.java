@@ -31,6 +31,9 @@ public final class AuthDtos {
             @NotBlank(message = "Le mot de passe est obligatoire")
             @Size(min = 8, message = "Le mot de passe doit contenir au moins 8 caractères") String password) {}
 
+    /** Validation d'une inscription avec le jeton du lien reçu par l'admin */
+    public record ValidationRequest(@NotBlank(message = "Le lien de validation est invalide") String token) {}
+
     public record AuthResponse(String token, UserDto user) {}
 
     public record MessageResponse(String message) {}

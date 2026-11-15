@@ -47,6 +47,11 @@ export class AuthService {
     return this.http.post<{ message: string }>(`${this.api}/reset-password`, { token, password });
   }
 
+  /** Validation d'une inscription depuis le lien reçu par l'admin (jeton à usage unique) */
+  validateAccount(token: string) {
+    return this.http.post<{ message: string }>(`${this.api}/validate-account`, { token });
+  }
+
   logout(redirect = true) {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);

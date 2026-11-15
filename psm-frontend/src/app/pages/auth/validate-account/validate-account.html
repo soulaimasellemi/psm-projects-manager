@@ -1,0 +1,50 @@
+<div class="auth-page">
+  <div class="auth-header">
+    <div class="container text-center text-white">
+      <span class="brand-logo brand-logo-lg mb-3"><i class="fas fa-user-check"></i></span>
+      <h1 class="display-6 fw-bold">Validation d'une inscription</h1>
+      <p class="lead text-white-50 mb-0">Activez le compte : le collaborateur recevra un email pour se connecter.</p>
+    </div>
+    <div class="auth-separator">
+      <svg viewBox="0 0 2560 100" preserveAspectRatio="none"><polygon points="2560 0 2560 100 0 100"></polygon></svg>
+    </div>
+  </div>
+
+  <div class="container auth-body">
+    <div class="row justify-content-center">
+      <div class="col-lg-5 col-md-7">
+        <div class="card auth-card">
+          <div class="card-body px-lg-5 py-5 text-center">
+            @if (!token()) {
+              <span class="icon-shape bg-gradient-red text-white mb-3"><i class="fas fa-link-slash"></i></span>
+              <h5 class="text-dark">Lien incomplet</h5>
+              <p class="text-muted small">Utilisez le bouton « Valider le compte » de l'email, ou validez le compte depuis la page Utilisateurs.</p>
+            } @else if (message()) {
+              <span class="icon-shape bg-gradient-success text-white mb-3"><i class="fas fa-circle-check"></i></span>
+              <h5 class="text-dark">Compte activé</h5>
+              <p class="text-muted">{{ message() }}</p>
+            } @else {
+              <span class="icon-shape bg-gradient-primary text-white mb-3"><i class="fas fa-user-plus"></i></span>
+              <h5 class="text-dark">Activer ce compte ?</h5>
+              <p class="text-muted small">Le nouveau collaborateur pourra se connecter immédiatement et recevra un email de confirmation.</p>
+              @if (error()) {
+                <div class="alert alert-danger py-2 small text-start"><i class="fas fa-circle-exclamation me-1"></i>{{ error() }}</div>
+              }
+              <button type="button" class="btn btn-success w-100 mt-2" (click)="valider()" [disabled]="loading()">
+                @if (loading()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+                <i class="fas fa-check me-1"></i>Valider le compte
+              </button>
+            }
+          </div>
+        </div>
+        <div class="text-center mt-3">
+          @if (connecte) {
+            <a routerLink="/utilisateurs" class="text-light"><small><i class="fas fa-users-gear me-1"></i>Aller à la page Utilisateurs</small></a>
+          } @else {
+            <a routerLink="/login" class="text-light"><small><i class="fas fa-arrow-left me-1"></i>Aller à la connexion</small></a>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

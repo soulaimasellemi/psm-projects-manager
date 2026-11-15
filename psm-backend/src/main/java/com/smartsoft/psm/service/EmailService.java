@@ -33,9 +33,14 @@ public class EmailService {
         this.mailSender = mailSender;
     }
 
-    /** Notifie l'admin qu'un nouvel utilisateur s'est inscrit. */
+    /**
+     * Notifie l'admin qu'un nouvel utilisateur s'est inscrit.
+     * Le bouton "Valider le compte" active le compte en un clic (jeton à usage unique) ;
+     * le collaborateur reçoit alors l'email "compte activé" avec le lien de connexion.
+     */
     @Async
-    public void notifierAdminInscription(User u) {
+    public void notifierAdminInscription(User u, String jetonValidation, int validiteJours) {
+        String lienValidation = frontendUrl + "/valider-compte?token=" + jetonValidation;
         String contenu = """
                 <p>Bonjour,</p>
                 <p>Un nouvel utilisateur vient de s'inscrire sur <b>Projects Manager</b> et attend votre validation :</p>
@@ -44,9 +49,12 @@ public class EmailService {
                   <tr><td style="padding:6px 12px;color:#8898aa">Email</td><td style="padding:6px 12px">%s</td></tr>
                   <tr><td style="padding:6px 12px;color:#8898aa">Téléphone</td><td style="padding:6px 12px">%s</td></tr>
                 </table>
-                <p><a href="%s/utilisateurs" style="background:#5e72e4;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600">Valider le compte</a></p>
+                <p><a href="%s" style="background:#2dce89;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600">Valider le compte</a></p>
+                <p style="color:#8898aa;font-size:13px">Le collaborateur recevra automatiquement un email pour se connecter.
+                Ce lien est valable %d jours. Vous pouvez aussi gérer les comptes depuis la
+                <a href="%s/utilisateurs" style="color:#5e72e4">page Utilisateurs</a>.</p>
                 """.formatted(esc(u.getPrenom()), esc(u.getNom()), esc(u.getEmail()),
-                u.getTel() == null || u.getTel().isBlank() ? "-" : esc(u.getTel()), frontendUrl);
+                u.getTel() == null || u.getTel().isBlank() ? "-" : esc(u.getTel()), lienValidation, validiteJours, frontendUrl);
         envoyer(adminEmail, "[PSM] Nouvelle inscription : " + u.getPrenom() + " " + u.getNom(), contenu);
     }
 

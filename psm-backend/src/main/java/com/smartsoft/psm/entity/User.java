@@ -49,6 +49,12 @@ public class User implements UserDetails {
 
     private LocalDateTime resetTokenExpiration;
 
+    /** Validation de l'inscription en un clic depuis l'email de l'admin (empreinte SHA-256 du jeton) */
+    @Column(length = 64)
+    private String validationTokenHash;
+
+    private LocalDateTime validationTokenExpiration;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -106,6 +112,19 @@ public class User implements UserDetails {
     public void setResetTokenHash(String resetTokenHash) { this.resetTokenHash = resetTokenHash; }
     public LocalDateTime getResetTokenExpiration() { return resetTokenExpiration; }
     public void setResetTokenExpiration(LocalDateTime resetTokenExpiration) { this.resetTokenExpiration = resetTokenExpiration; }
+
+    public String getValidationTokenHash() { return validationTokenHash; }
+    public LocalDateTime getValidationTokenExpiration() { return validationTokenExpiration; }
+
+    public void definirJetonValidation(String hash, LocalDateTime expiration) {
+        this.validationTokenHash = hash;
+        this.validationTokenExpiration = expiration;
+    }
+
+    /** Le compte est activé (lien email ou page Utilisateurs) : le lien de validation ne sert plus */
+    public void effacerJetonValidation() {
+        definirJetonValidation(null, null);
+    }
 
     public String getNomComplet() { return prenom + " " + nom; }
 }
