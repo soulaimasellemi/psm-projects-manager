@@ -1,0 +1,39 @@
+# Blueprint Render : https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: psm
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /
+    envVars:
+      - key: DB_HOST
+        fromDatabase: { name: psm-db, property: host }
+      - key: DB_PORT
+        fromDatabase: { name: psm-db, property: port }
+      - key: DB_NAME
+        fromDatabase: { name: psm-db, property: database }
+      - key: DB_USERNAME
+        fromDatabase: { name: psm-db, property: user }
+      - key: DB_PASSWORD
+        fromDatabase: { name: psm-db, property: password }
+      - key: JWT_SECRET
+        generateValue: true
+      # A renseigner dans le dashboard Render (sync: false = pas de valeur dans Git)
+      - key: INIT_ADMIN_EMAIL
+        sync: false
+      - key: INIT_ADMIN_PASSWORD
+        sync: false
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: ADMIN_NOTIFY_EMAIL
+        sync: false
+
+databases:
+  - name: psm-db
+    plan: free
+    databaseName: psm_db
+    user: psm
