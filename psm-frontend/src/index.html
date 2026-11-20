@@ -8,6 +8,17 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <!-- Applique le thème avant le démarrage d'Angular (évite un flash blanc en mode sombre) -->
+  <script>
+    (function () {
+      var theme;
+      try { theme = (JSON.parse(localStorage.getItem('psm_prefs')) || {}).theme; } catch (e) { theme = null; }
+      if (theme !== 'dark' && theme !== 'light') {
+        theme = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-bs-theme', theme);
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>

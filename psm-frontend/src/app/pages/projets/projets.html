@@ -8,20 +8,35 @@
           @if (nomClientFiltre(); as nom) { pour <strong class="text-primary">{{ nom }}</strong> }
         </small>
       </div>
-      <button class="btn btn-primary ms-auto" type="button" (click)="openCreate()">
-        <i class="fas fa-plus me-1"></i> Nouveau projet
-      </button>
+      <div class="ms-auto d-flex flex-wrap gap-2">
+        <!-- Export de la liste filtrée -->
+        <div class="btn-group">
+          <button class="btn btn-light" type="button" (click)="exporter('xlsx')" [disabled]="exporting()" title="Exporter en Excel">
+            @if (exporting() === 'xlsx') { <span class="spinner-border spinner-border-sm me-1"></span> }
+            @else { <i class="fas fa-file-excel text-success me-1"></i> }
+            Excel
+          </button>
+          <button class="btn btn-light" type="button" (click)="exporter('pdf')" [disabled]="exporting()" title="Exporter en PDF">
+            @if (exporting() === 'pdf') { <span class="spinner-border spinner-border-sm me-1"></span> }
+            @else { <i class="fas fa-file-pdf text-danger me-1"></i> }
+            PDF
+          </button>
+        </div>
+        <button class="btn btn-primary" type="button" (click)="openCreate()">
+          <i class="fas fa-plus me-1"></i> Nouveau projet
+        </button>
+      </div>
     </div>
 
     <!-- Filtres -->
     <div class="row g-2 mt-3">
-      <div class="col-md-5">
+      <div class="col-xl-3 col-md-6">
         <div class="input-group input-group-alternative">
           <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
-          <input class="form-control" placeholder="Rechercher un projet ou un client…" (input)="onSearch($any($event.target).value)">
+          <input class="form-control" placeholder="Projet ou client…" (input)="onSearch($any($event.target).value)">
         </div>
       </div>
-      <div class="col-md-4">
+      <div class="col-xl-3 col-md-6">
         <select class="form-select" (change)="onClient($any($event.target).value)">
           <option value="" [selected]="!clientId()">Tous les clients</option>
           @for (c of clients(); track c.id) {
@@ -29,54 +44,98 @@
           }
         </select>
       </div>
-      <div class="col-md-3">
+      <div class="col-xl-2 col-md-4">
         <select class="form-select" (change)="onStatut($any($event.target).value)">
           <option value="">Tous les statuts</option>
           @for (s of statuts; track s.value) { <option [value]="s.value">{{ s.label }}</option> }
         </select>
       </div>
+      <div class="col-xl-4 col-md-8 d-flex gap-2">
+        <button type="button" class="btn flex-fill text-nowrap" [class.btn-primary]="mesProjets()" [class.btn-light]="!mesProjets()"
+                (click)="toggleMesProjets()" title="Projets auxquels je suis affecté(e)">
+          <i class="fas fa-user-check me-1"></i>Mes projets
+        </button>
+        <button type="button" class="btn flex-fill text-nowrap" [class.btn-danger]="enRetard()" [class.btn-light]="!enRetard()"
+                (click)="toggleEnRetard()" title="Fin prévue dépassée et projet non terminé">
+          <i class="fas fa-triangle-exclamation me-1"></i>En retard
+        </button>
+      </div>
     </div>
   </div>
 
   <div class="table-responsive">
-    <table class="table align-items-center table-flush table-hover mb-0">
+    <table class="table table-compact align-items-center table-flush table-hover mb-0">
       <thead class="thead-light">
         <tr>
-          <th>Projet</th>
-          <th>Client</th>
+          <th>Projet / client</th>
           <th>Budget</th>
-          <th>Durée</th>
+          <th>Avancement</th>
+          <th>Équipe</th>
+          <th>Santé</th>
           <th>Statut</th>
           <th class="text-end">Actions</th>
         </tr>
       </thead>
       <tbody>
         @if (loading() && !data()) {
-          <tr><td colspan="6" class="text-center py-5"><span class="spinner-border text-primary"></span></td></tr>
+          <tr><td colspan="7" class="text-center py-5"><span class="spinner-border text-primary"></span></td></tr>
         }
         @for (p of data()?.content ?? []; track p.id) {
           <tr>
-            <td style="max-width: 320px">
+            <td style="max-width: 300px">
               <div class="d-flex align-items-center">
                 <span class="icon-shape icon-shape-sm bg-gradient-{{ statutInfo(p.statut).color }} text-white me-3">
                   <i class="fas fa-code"></i>
                 </span>
                 <div class="text-truncate">
-                  <div class="fw-semibold text-dark text-truncate">{{ p.libelle }}</div>
-                  <small class="text-muted text-truncate d-block">{{ p.description || 'Aucune description' }}</small>
+                  <a [routerLink]="['/projets', p.id]" class="fw-semibold text-dark text-truncate d-block project-link">{{ p.libelle }}</a>
+                  <small class="text-muted text-truncate d-block">
+                    <i class="fas fa-building me-1"></i>{{ p.nomClient }}
+                    <span class="mx-1">·</span>
+                    @if (p.dateFinPrevue) {
+                      <span [class.text-danger]="p.enRetard"><i class="far fa-calendar me-1"></i>{{ p.dateFinPrevue | date: 'dd/MM/yyyy' }}</span>
+                    } @else {
+                      {{ p.duree }} mois
+                    }
+                  </small>
                 </div>
               </div>
             </td>
-            <td>{{ p.nomClient }}</td>
             <td class="fw-semibold">{{ p.budget | currency: 'TND' : 'symbol' : '1.0-0' }}</td>
-            <td>{{ p.duree }} mois</td>
+            <td style="min-width: 140px">
+              <div class="d-flex align-items-center gap-2">
+                <span class="small fw-semibold" style="width: 36px">{{ p.avancement }}%</span>
+                <div class="progress flex-fill" style="height: 6px">
+                  <div class="progress-bar bg-{{ couleurAvancement(p) }}" [style.width.%]="p.avancement"></div>
+                </div>
+              </div>
+            </td>
             <td>
+              <div class="avatar-group">
+                @for (m of p.membres.slice(0, 3); track m.id) {
+                  <span class="avatar avatar-xs bg-gradient-primary" [title]="m.nomComplet">{{ initiales(m.nomComplet) }}</span>
+                }
+                @if (p.membres.length > 3) {
+                  <span class="avatar avatar-xs bg-gradient-secondary" [title]="p.membres.length - 3 + ' autre(s)'">+{{ p.membres.length - 3 }}</span>
+                }
+                @if (p.membres.length === 0) { <small class="text-muted">—</small> }
+              </div>
+            </td>
+            <td class="text-nowrap">
+              <span class="badge badge-soft-{{ niveaux[p.sante.niveau].color }}" [title]="p.sante.raisons.join(' · ')">
+                <i class="fas {{ niveaux[p.sante.niveau].icon }} me-1"></i>{{ p.sante.score }}
+              </span>
+            </td>
+            <td class="text-nowrap">
               <span class="badge-dot"><i class="bg-{{ statutInfo(p.statut).color }}"></i>{{ statutInfo(p.statut).label }}</span>
+              @if (p.enRetard) {
+                <span class="badge badge-soft-danger ms-1" title="Date de fin prévue dépassée"><i class="fas fa-clock me-1"></i>En retard</span>
+              }
             </td>
             <td class="text-end text-nowrap">
-              <button class="btn btn-icon btn-soft-info" type="button" (click)="detail.set(p)" title="Détails">
-                <i class="fas fa-eye"></i>
-              </button>
+              <a class="btn btn-icon btn-soft-info" [routerLink]="['/projets', p.id]" title="Ouvrir : santé et tâches">
+                <i class="fas fa-table-columns"></i>
+              </a>
               <button *appHasRole="'ADMIN'" class="btn btn-icon btn-soft-primary" type="button" (click)="openEdit(p)" title="Modifier">
                 <i class="fas fa-pen"></i>
               </button>
@@ -88,7 +147,7 @@
         } @empty {
           @if (!loading()) {
             <tr>
-              <td colspan="6" class="text-center text-muted py-5">
+              <td colspan="7" class="text-center text-muted py-5">
                 <i class="fas fa-diagram-project fa-2x mb-2 d-block opacity-50"></i>Aucun projet trouvé.
               </td>
             </tr>
@@ -108,35 +167,6 @@
   <div class="alert alert-secondary-soft small">
     <i class="fas fa-circle-info me-1"></i>
     En tant que <strong>collaborateur</strong>, vous pouvez consulter et ajouter des projets. La modification et la suppression sont réservées à l'administrateur.
-  </div>
-}
-
-<!-- ===== Modal détails ===== -->
-@if (detail(); as p) {
-  <div class="psm-modal-backdrop" (click)="detail.set(null)">
-    <div class="psm-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
-      <div class="psm-modal-header">
-        <h5 class="mb-0"><i class="fas fa-diagram-project me-2 text-primary"></i>{{ p.libelle }}</h5>
-        <button type="button" class="btn-close" (click)="detail.set(null)" aria-label="Fermer"></button>
-      </div>
-      <div class="psm-modal-body">
-        <div class="row g-3 mb-3">
-          <div class="col-6 col-md-3"><div class="detail-tile"><small>Client</small><strong>{{ p.nomClient }}</strong></div></div>
-          <div class="col-6 col-md-3"><div class="detail-tile"><small>Budget</small><strong>{{ p.budget | currency: 'TND' : 'symbol' : '1.0-0' }}</strong></div></div>
-          <div class="col-6 col-md-3"><div class="detail-tile"><small>Durée</small><strong>{{ p.duree }} mois</strong></div></div>
-          <div class="col-6 col-md-3">
-            <div class="detail-tile"><small>Statut</small>
-              <span class="badge-dot"><i class="bg-{{ statutInfo(p.statut).color }}"></i>{{ statutInfo(p.statut).label }}</span>
-            </div>
-          </div>
-        </div>
-        <h6 class="text-uppercase text-muted small ls-1">Description</h6>
-        <p class="mb-0">{{ p.description || 'Aucune description.' }}</p>
-      </div>
-      <div class="psm-modal-footer">
-        <button type="button" class="btn btn-light" (click)="detail.set(null)">Fermer</button>
-      </div>
-    </div>
   </div>
 }
 
@@ -184,11 +214,52 @@
             <div class="col-md-6">
               <label class="form-label">Durée *</label>
               <div class="input-group">
-                <input class="form-control" type="number" min="1" formControlName="duree" [class.is-invalid]="invalid('duree')" placeholder="6">
+                <input class="form-control" type="number" min="1" formControlName="duree" [class.is-invalid]="invalid('duree')" placeholder="6" (change)="suggererFin()">
                 <span class="input-group-text">mois</span>
               </div>
               @if (invalid('duree')) { <small class="text-danger">Durée minimale : 1 mois.</small> }
             </div>
+
+            <!-- Suivi -->
+            <div class="col-md-6">
+              <label class="form-label">Date de début</label>
+              <input class="form-control" type="date" formControlName="dateDebut" (change)="suggererFin()">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fin prévue</label>
+              <input class="form-control" type="date" formControlName="dateFinPrevue" [class.is-invalid]="datesIncoherentes()">
+              <div class="invalid-feedback">La fin prévue doit être après la date de début.</div>
+            </div>
+            <div class="col-12">
+              <label class="form-label d-flex justify-content-between">
+                <span>Avancement</span>
+                <strong class="text-primary">{{ form.controls.statut.value === 'TERMINE' ? 100 : form.controls.avancement.value }} %</strong>
+              </label>
+              <input class="form-range" type="range" min="0" max="100" step="5" formControlName="avancement"
+                     [attr.disabled]="form.controls.statut.value === 'TERMINE' ? true : null">
+              @if (form.controls.statut.value === 'TERMINE') {
+                <small class="text-muted">Un projet terminé est automatiquement à 100 %.</small>
+              }
+            </div>
+
+            <!-- Équipe -->
+            <div class="col-12">
+              <label class="form-label">Équipe ({{ membresSelection().length }} collaborateur(s))</label>
+              <div class="members-picker">
+                @for (u of collaborateursProposes(); track u.id) {
+                  <label class="member-option" [class.selected]="membresSelection().includes(u.id)">
+                    <input type="checkbox" class="form-check-input me-2" [checked]="membresSelection().includes(u.id)" (change)="toggleMembre(u.id)">
+                    <span class="avatar avatar-xs bg-gradient-primary me-2">{{ initiales(u.nomComplet) }}</span>
+                    <span class="text-truncate">
+                      {{ u.nomComplet }}<br><small class="text-muted">{{ u.email }}</small>
+                    </span>
+                  </label>
+                } @empty {
+                  <small class="text-muted">Aucun collaborateur actif.</small>
+                }
+              </div>
+            </div>
+
             <div class="col-12">
               <label class="form-label">Description</label>
               <textarea class="form-control" rows="3" formControlName="description" placeholder="Objectifs, technologies, livrables…"></textarea>

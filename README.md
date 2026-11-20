@@ -38,15 +38,24 @@ psm/
 
 ## 2. Configuration du backend
 
-Ouvrez `psm-backend/src/main/resources/application.properties` et modifiez les lignes marquées **A MODIFIER** :
+Le fichier `application.properties` n'est pas versionné (il est dans `.gitignore`, car il contient vos mots de passe). Après un clone, créez-le à partir du modèle :
+
+```bash
+cp psm-backend/src/main/resources/application.properties.example psm-backend/src/main/resources/application.properties
+```
+
+Ouvrez ensuite `psm-backend/src/main/resources/application.properties` et modifiez les lignes marquées **A MODIFIER** :
 
 ```properties
 spring.datasource.password=${DB_PASSWORD:VOTRE_MOT_DE_PASSE_MYSQL}
 spring.mail.username=${MAIL_USERNAME:votre.adresse@gmail.com}
 spring.mail.password=${MAIL_PASSWORD:abcdefghijklmnop}
 psm.admin.email=${ADMIN_NOTIFY_EMAIL:votre.adresse@gmail.com}
+psm.init-admin.email=${INIT_ADMIN_EMAIL:votre.adresse@gmail.com}
+psm.init-admin.password=${INIT_ADMIN_PASSWORD:VotreMotDePasseAdmin}
 ```
 
+* **Administrateur initial** : `psm.init-admin.*` crée **votre** compte admin (actif) au démarrage s'il n'existe pas encore. Mot de passe : 8 caractères minimum ; changez-le ensuite depuis **Mon profil**. Mettez `psm.demo-data=false` pour ne pas créer les comptes de démonstration.
 * **MySQL** : mettez le mot de passe `root` que vous utilisez dans Workbench. La base `psm_db` et les tables sont **créées automatiquement**.
 * **Gmail** : il faut un *mot de passe d'application*, pas votre vrai mot de passe :
   1. Activez la **validation en 2 étapes** sur votre compte Google (myaccount.google.com → Sécurité).
@@ -128,6 +137,15 @@ Ouvrez **http://localhost:4200**. Sur la page de connexion, les boutons « Admin
 | PUT | `/api/users/{id}/statut` · `/api/users/{id}/roles` | **Admin** |
 | DELETE | `/api/users/{id}` | **Admin** |
 | GET | `/api/stats` | Admin, Collaborateur |
+| POST | `/api/auth/forgot-password` · `/api/auth/reset-password` | public (lien par email, valable 30 min, usage unique) |
+| GET | `/api/projets?membreId=&enRetard=true` | Admin, Collaborateur — projets d'un collaborateur / en retard |
+| GET | `/api/clients/export?format=xlsx\|pdf` · `/api/projets/export?format=xlsx\|pdf` | Admin, Collaborateur — mêmes filtres que la liste |
+| GET | `/api/users/options` | Admin, Collaborateur — comptes actifs à affecter aux projets |
+| POST | `/api/users` | **Admin** — créer un compte (ex. un autre administrateur) |
+| GET | `/api/activites?q=&cible=&action=` | **Admin** — historique des actions |
+| GET / POST | `/api/projets/{id}/taches` | lecture : Admin, Collaborateur · création : Admin ou membre du projet |
+| PUT | `/api/taches/{id}` · `/api/taches/{id}/deplacer` (glisser-déposer) | Admin ou membre du projet |
+| DELETE | `/api/taches/{id}` | **Admin** |
 
 ---
 
@@ -164,6 +182,8 @@ Ouvrez **http://localhost:4200**. Sur la page de connexion, les boutons « Admin
 | Consulter et ajouter des clients / projets | ✅ | ✅ |
 | Modifier et supprimer | ✅ | ❌ (boutons masqués, et 403 côté API) |
 | Page Utilisateurs (valider les comptes, gérer les rôles) | ✅ | ❌ (bloquée par le `roleGuard`) |
+| Page Historique des actions | ✅ | ❌ (bloquée par le `roleGuard`, 403 côté API) |
+| Exporter en Excel / PDF, voir « Mes projets » | ✅ | ✅ |
 
 ### Fonctionnalités en plus du cahier des charges
 
@@ -173,6 +193,14 @@ Ouvrez **http://localhost:4200**. Sur la page de connexion, les boutons « Admin
 * **Fichier joint par client** (upload / download), stocké dans le dossier `uploads/` (variable `UPLOAD_DIR`).
 * **Validation des inscriptions par l'admin** : un email lui est envoyé à l'inscription, puis un autre est envoyé à l'utilisateur quand son compte est activé.
 * **Page profil** : modifier ses informations et son mot de passe.
+* **Équipe des projets** : affectation des collaborateurs aux projets (relation « gérer » User ↔ Projet du diagramme de classes, ManyToMany `projet_membres`), filtre « Mes projets ».
+* **Suivi des projets** : date de début, fin prévue, avancement en %, badge et filtre « En retard », graphique d'avancement sur le dashboard.
+* **Export Excel et PDF** des listes clients et projets (Apache POI, OpenPDF), avec les filtres en cours.
+* **Historique des actions** (page admin) : connexions, créations, modifications, suppressions, validations, avec recherche et filtres.
+* **Tableau Kanban par projet** (page `/projets/:id`) : tâches À faire / En cours / Terminée, glisser-déposer (Angular CDK), priorité, échéance, responsable choisi dans l'équipe. **L'avancement du projet est calculé automatiquement** à partir des tâches terminées. Droits : admin = tout ; collaborateur = tâches des projets dont il est membre ; suppression = admin.
+* **Détection automatique des risques** : chaque projet a un score de santé sur 100 (Sain / À surveiller / Critique) avec les raisons (fin dépassée, avancement en retard sur le temps écoulé, échéance proche, tâches en retard, tâches urgentes sans responsable, projet sans équipe). Le dashboard liste les projets à risque. Règles détaillées dans `SanteDto.java`.
+* **Mode sombre et dashboard personnalisable** : bouton lune / soleil (Bootstrap `data-bs-theme`), blocs du tableau de bord à afficher, masquer et réordonner par glisser-déposer. Préférences enregistrées **sur le compte** (`PUT /api/users/me/preferences`), retrouvées sur n'importe quel ordinateur.
+* **Mot de passe oublié** : lien de réinitialisation par email, jeton aléatoire stocké haché (SHA-256), valable 30 minutes et à usage unique.
 
 ---
 

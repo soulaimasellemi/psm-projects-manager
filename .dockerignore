@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.angular
+**/target
+**/uploads
+**/.idea
+**/.settings
+**/.classpath
+**/.project
+.git
+psm-backend/src/main/resources/application.properties
+psm-backend/src/main/resources/static/*

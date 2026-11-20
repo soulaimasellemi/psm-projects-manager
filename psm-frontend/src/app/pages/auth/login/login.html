@@ -1,4 +1,5 @@
 <div class="auth-page">
+  <app-theme-toggle [floating]="true" />
   <div class="auth-header">
     <div class="container text-center text-white">
       <span class="brand-logo brand-logo-lg mb-3"><i class="fas fa-layer-group"></i></span>
@@ -58,6 +59,9 @@
                 @if (submitted() && form.controls.password.invalid) {
                   <small class="text-danger">Le mot de passe est obligatoire.</small>
                 }
+                <div class="text-end mt-2">
+                  <a routerLink="/mot-de-passe-oublie" class="small">Mot de passe oublié ?</a>
+                </div>
               </div>
               <div class="text-center">
                 <button type="submit" class="btn btn-primary w-100 my-3" [disabled]="loading()">

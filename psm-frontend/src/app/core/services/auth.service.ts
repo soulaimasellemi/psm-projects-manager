@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthResponse, RegisterRequest, RoleName, User } from '../models';
+import { PreferencesService } from './preferences.service';
 
 const TOKEN_KEY = 'psm_token';
 const USER_KEY = 'psm_user';
@@ -12,6 +13,7 @@ const USER_KEY = 'psm_user';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private prefs = inject(PreferencesService);
   private readonly api = `${environment.apiUrl}/auth`;
 
   private readonly _user = signal<User | null>(this.readUser());
@@ -22,6 +24,11 @@ export class AuthService {
     const u = this._user();
     return u ? `${u.prenom} ${u.nom}` : '';
   });
+
+  constructor() {
+    // Déjà connecté (rechargement de la page) : les changements de préférences iront sur le compte
+    this.prefs.connecte = this.isLoggedIn();
+  }
 
   get token(): string | null {
     return localStorage.getItem(TOKEN_KEY);
@@ -37,10 +44,26 @@ export class AuthService {
     return this.http.post<{ message: string }>(`${this.api}/register`, data);
   }
 
+  /** Mot de passe oublié, étape 1 : demande du lien par email */
+  forgotPassword(email: string) {
+    return this.http.post<{ message: string }>(`${this.api}/forgot-password`, { email });
+  }
+
+  /** Mot de passe oublié, étape 2 : nouveau mot de passe avec le jeton du lien */
+  resetPassword(token: string, password: string) {
+    return this.http.post<{ message: string }>(`${this.api}/reset-password`, { token, password });
+  }
+
+  /** Validation d'une inscription depuis le lien reçu par l'admin (jeton à usage unique) */
+  validateAccount(token: string) {
+    return this.http.post<{ message: string }>(`${this.api}/validate-account`, { token });
+  }
+
   logout(redirect = true) {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     this._user.set(null);
+    this.prefs.connecte = false;
     if (redirect) this.router.navigate(['/login']);
   }
 
@@ -64,6 +87,9 @@ export class AuthService {
   private store(res: AuthResponse) {
     localStorage.setItem(TOKEN_KEY, res.token);
     this.updateUser(res.user);
+    // Thème et dashboard enregistrés sur le compte (retrouvés sur n'importe quel ordinateur)
+    this.prefs.connecte = true;
+    this.prefs.chargerDuCompte(res.user.preferences);
   }
 
   private readUser(): User | null {

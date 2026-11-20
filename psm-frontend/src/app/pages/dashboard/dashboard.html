@@ -1,168 +1,331 @@
-<!-- Message d'accueil -->
-<div class="welcome text-white mb-4">
-  <h2 class="fw-bold mb-1">Bonjour {{ auth.user()?.prenom }} 👋</h2>
-  <p class="mb-0 text-white-50">Voici l'état de l'activité de l'agence aujourd'hui.</p>
+<!-- Message d'accueil + personnalisation -->
+<div class="welcome text-white mb-4 d-flex flex-wrap align-items-end gap-3">
+  <div>
+    <h2 class="fw-bold mb-1">Bonjour {{ auth.user()?.prenom }} 👋</h2>
+    <p class="mb-0 text-white-50">Voici l'état de l'activité de l'agence aujourd'hui.</p>
+  </div>
+  <button type="button" class="btn btn-sm btn-light ms-auto" (click)="ouvrirPersonnalisation()">
+    <i class="fas fa-sliders me-1"></i>Personnaliser
+  </button>
 </div>
 
-<!-- Cartes statistiques -->
-<div class="row g-4 mb-4">
-  <div class="col-xl-3 col-md-6">
-    <div class="card card-stats h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <h6 class="card-title-sm">Clients</h6>
-            <span class="stat-value">{{ stats()?.nbClients ?? '—' }}</span>
-          </div>
-          <div class="icon-shape bg-gradient-info text-white"><i class="fas fa-building"></i></div>
-        </div>
-        <p class="mt-3 mb-0 small text-muted">
-          <a routerLink="/clients" class="text-info fw-semibold">Voir les clients <i class="fas fa-arrow-right ms-1"></i></a>
-        </p>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="card card-stats h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <h6 class="card-title-sm">Projets</h6>
-            <span class="stat-value">{{ stats()?.nbProjets ?? '—' }}</span>
-          </div>
-          <div class="icon-shape bg-gradient-orange text-white"><i class="fas fa-diagram-project"></i></div>
-        </div>
-        <p class="mt-3 mb-0 small text-muted">
-          <span class="text-info fw-semibold me-1"><i class="fas fa-spinner"></i> {{ stats()?.projetsParStatut?.EN_COURS ?? 0 }}</span>
-          en cours
-        </p>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    <div class="card card-stats h-100">
-      <div class="card-body">
-        <div class="d-flex justify-content-between">
-          <div>
-            <h6 class="card-title-sm">Budget total</h6>
-            <span class="stat-value">{{ (stats()?.budgetTotal ?? 0) | currency: 'TND' : 'symbol' : '1.0-0' }}</span>
-          </div>
-          <div class="icon-shape bg-gradient-success text-white"><i class="fas fa-coins"></i></div>
-        </div>
-        <p class="mt-3 mb-0 small text-muted">Tous projets confondus</p>
-      </div>
-    </div>
-  </div>
-  <div class="col-xl-3 col-md-6">
-    @if (auth.isAdmin()) {
-      <div class="card card-stats h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between">
-            <div>
-              <h6 class="card-title-sm">Inscriptions en attente</h6>
-              <span class="stat-value">{{ stats()?.usersEnAttente ?? '—' }}</span>
+<!-- Blocs du dashboard : ordre et visibilité choisis par l'utilisateur (enregistrés sur son compte) -->
+@for (bloc of prefs.blocsVisibles(); track bloc) {
+  <div class="dashboard-bloc">
+    @switch (bloc) {
+      @case ('indicateurs') {
+        <!-- Cartes statistiques -->
+        <div class="row g-4 mb-4">
+          <div class="col-xl-3 col-md-6">
+            <div class="card card-stats h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h6 class="card-title-sm">Clients</h6>
+                    <span class="stat-value">{{ stats()?.nbClients ?? '—' }}</span>
+                  </div>
+                  <div class="icon-shape bg-gradient-info text-white"><i class="fas fa-building"></i></div>
+                </div>
+                <p class="mt-3 mb-0 small text-muted">
+                  <a routerLink="/clients" class="text-info fw-semibold">Voir les clients <i class="fas fa-arrow-right ms-1"></i></a>
+                </p>
+              </div>
             </div>
-            <div class="icon-shape bg-gradient-red text-white"><i class="fas fa-user-clock"></i></div>
           </div>
-          <p class="mt-3 mb-0 small text-muted">
-            <a routerLink="/utilisateurs" class="text-danger fw-semibold">Valider les comptes <i class="fas fa-arrow-right ms-1"></i></a>
-          </p>
-        </div>
-      </div>
-    } @else {
-      <div class="card card-stats h-100">
-        <div class="card-body">
-          <div class="d-flex justify-content-between">
-            <div>
-              <h6 class="card-title-sm">Projets terminés</h6>
-              <span class="stat-value">{{ stats() ? tauxTermines(stats()!) : '—' }}%</span>
+          <div class="col-xl-3 col-md-6">
+            <div class="card card-stats h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h6 class="card-title-sm">Projets</h6>
+                    <span class="stat-value">{{ stats()?.nbProjets ?? '—' }}</span>
+                  </div>
+                  <div class="icon-shape bg-gradient-orange text-white"><i class="fas fa-diagram-project"></i></div>
+                </div>
+                <p class="mt-3 mb-0 small text-muted">
+                  <span class="text-info fw-semibold me-1"><i class="fas fa-spinner"></i> {{ stats()?.projetsParStatut?.EN_COURS ?? 0 }}</span>
+                  en cours
+                </p>
+              </div>
             </div>
-            <div class="icon-shape bg-gradient-red text-white"><i class="fas fa-flag-checkered"></i></div>
           </div>
-          <p class="mt-3 mb-0 small text-muted">Taux de réalisation</p>
+          <div class="col-xl-3 col-md-6">
+            <div class="card card-stats h-100">
+              <div class="card-body">
+                <div class="d-flex justify-content-between">
+                  <div>
+                    <h6 class="card-title-sm">Budget total</h6>
+                    <span class="stat-value">{{ (stats()?.budgetTotal ?? 0) | currency: 'TND' : 'symbol' : '1.0-0' }}</span>
+                  </div>
+                  <div class="icon-shape bg-gradient-success text-white"><i class="fas fa-coins"></i></div>
+                </div>
+                <p class="mt-3 mb-0 small text-muted">Tous projets confondus</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-3 col-md-6">
+            @if (auth.isAdmin()) {
+              <div class="card card-stats h-100">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <h6 class="card-title-sm">Inscriptions en attente</h6>
+                      <span class="stat-value">{{ stats()?.usersEnAttente ?? '—' }}</span>
+                    </div>
+                    <div class="icon-shape bg-gradient-red text-white"><i class="fas fa-user-clock"></i></div>
+                  </div>
+                  <p class="mt-3 mb-0 small text-muted">
+                    <a routerLink="/utilisateurs" class="text-danger fw-semibold">Valider les comptes <i class="fas fa-arrow-right ms-1"></i></a>
+                  </p>
+                </div>
+              </div>
+            } @else {
+              <div class="card card-stats h-100">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <h6 class="card-title-sm">Projets terminés</h6>
+                      <span class="stat-value">{{ stats() ? tauxTermines(stats()!) : '—' }}%</span>
+                    </div>
+                    <div class="icon-shape bg-gradient-red text-white"><i class="fas fa-flag-checkered"></i></div>
+                  </div>
+                  <p class="mt-3 mb-0 small text-muted">Taux de réalisation</p>
+                </div>
+              </div>
+            }
+          </div>
         </div>
-      </div>
+      }
+      @case ('graphiques') {
+        <!-- Graphiques -->
+        <div class="row g-4 mb-4">
+          <div class="col-xl-8">
+            <div class="card bg-gradient-default h-100">
+              <div class="card-header bg-transparent border-0">
+                <h6 class="text-uppercase text-light ls-1 mb-1 small">Vue d'ensemble</h6>
+                <h5 class="text-white mb-0">Top 5 clients par budget</h5>
+              </div>
+              <div class="card-body">
+                <div class="chart-box"><canvas #budgetCanvas></canvas></div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-4">
+            <div class="card h-100">
+              <div class="card-header bg-transparent">
+                <h6 class="text-uppercase text-muted ls-1 mb-1 small">Avancement</h6>
+                <h5 class="mb-0">Projets par statut</h5>
+              </div>
+              <div class="card-body">
+                <div class="chart-box"><canvas #statutCanvas></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+      @case ('risques') {
+        <!-- Détection des risques : santé du portefeuille + projets à surveiller -->
+        <div class="card mb-4">
+          <div class="card-header d-flex flex-wrap align-items-center gap-3">
+            <div>
+              <h6 class="text-uppercase text-muted ls-1 mb-1 small">Détection automatique des risques</h6>
+              <h5 class="mb-0">Projets à risque</h5>
+            </div>
+            @if (stats(); as s) {
+              <div class="ms-auto d-flex flex-wrap gap-2">
+                <span class="badge badge-soft-primary fs-6"><i class="fas fa-heart-pulse me-1"></i>Santé moyenne : {{ s.santeMoyenne }}/100</span>
+                <span class="badge badge-soft-danger fs-6"><i class="fas fa-fire me-1"></i>{{ s.nbProjetsCritiques }} critique(s)</span>
+                <span class="badge badge-soft-warning fs-6"><i class="fas fa-triangle-exclamation me-1"></i>{{ s.nbProjetsASurveiller }} à surveiller</span>
+              </div>
+            }
+          </div>
+          <div class="card-body">
+            @for (r of stats()?.projetsARisque ?? []; track r.id) {
+              <a [routerLink]="['/projets', r.id]" class="risk-row">
+                <span class="risk-score bg-{{ niveaux[r.niveau].color }}">{{ r.score }}</span>
+                <div class="flex-fill min-w-0">
+                  <div class="fw-semibold text-dark text-truncate">{{ r.libelle }} <small class="text-muted fw-normal">· {{ r.nomClient }}</small></div>
+                  <div class="small text-muted text-truncate">{{ r.raisons.join(' · ') }}</div>
+                </div>
+                <span class="badge badge-soft-{{ niveaux[r.niveau].color }} d-none d-md-inline">{{ niveaux[r.niveau].label }}</span>
+                <i class="fas fa-chevron-right text-muted ms-2"></i>
+              </a>
+            } @empty {
+              @if (stats()) {
+                <p class="text-center text-muted mb-0 py-3"><i class="fas fa-circle-check text-success me-1"></i>Aucun projet à risque : tout est sous contrôle.</p>
+              }
+            }
+          </div>
+        </div>
+      }
+      @case ('suivi') {
+        <!-- Suivi des projets : retards, avancement, mes projets -->
+        <div class="row g-4 mb-4">
+          <div class="col-xl-4">
+            <div class="d-flex flex-column gap-4 h-100">
+              <a routerLink="/projets" [queryParams]="{ enRetard: true }" class="card card-stats shortcut">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <h6 class="card-title-sm">Projets en retard</h6>
+                      <span class="stat-value" [class.text-danger]="(stats()?.projetsEnRetard ?? 0) > 0">{{ stats()?.projetsEnRetard ?? '—' }}</span>
+                    </div>
+                    <div class="icon-shape bg-gradient-red text-white"><i class="fas fa-triangle-exclamation"></i></div>
+                  </div>
+                  <p class="mt-3 mb-0 small text-muted">Fin prévue dépassée, projet non terminé</p>
+                </div>
+              </a>
+              <div class="card card-stats">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <h6 class="card-title-sm">Avancement moyen</h6>
+                      <span class="stat-value">{{ stats()?.avancementMoyen ?? '—' }}%</span>
+                    </div>
+                    <div class="icon-shape bg-gradient-info text-white"><i class="fas fa-bars-progress"></i></div>
+                  </div>
+                  <div class="progress mt-3" style="height: 6px">
+                    <div class="progress-bar bg-info" [style.width.%]="stats()?.avancementMoyen ?? 0"></div>
+                  </div>
+                  <p class="mt-2 mb-0 small text-muted">Projets en cours</p>
+                </div>
+              </div>
+              <a routerLink="/projets" [queryParams]="{ mesProjets: true }" class="card card-stats shortcut">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between">
+                    <div>
+                      <h6 class="card-title-sm">Mes projets</h6>
+                      <span class="stat-value">{{ stats()?.mesProjets ?? '—' }}</span>
+                    </div>
+                    <div class="icon-shape bg-gradient-primary text-white"><i class="fas fa-user-check"></i></div>
+                  </div>
+                  <p class="mt-3 mb-0 small text-muted">Projets auxquels vous êtes affecté(e)</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div class="col-xl-8">
+            <div class="card h-100">
+              <div class="card-header bg-transparent">
+                <h6 class="text-uppercase text-muted ls-1 mb-1 small">Suivi</h6>
+                <h5 class="mb-0">Avancement des projets en cours</h5>
+              </div>
+              <div class="card-body">
+                <div class="chart-box"><canvas #avancementCanvas></canvas></div>
+                @if (stats() && !stats()!.avancements.length) {
+                  <p class="text-center text-muted small mb-0">Aucun projet en cours.</p>
+                }
+                <p class="small text-muted mb-0 mt-2">
+                  <span class="legend-dot bg-danger"></span>en retard
+                  <span class="legend-dot bg-primary ms-3"></span>dans les temps
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+      @case ('derniers') {
+        <!-- Derniers projets -->
+        <div class="card mb-4">
+          <div class="card-header d-flex align-items-center">
+            <h5 class="mb-0">Derniers projets</h5>
+            <a routerLink="/projets" class="btn btn-sm btn-primary ms-auto">Tout voir</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-items-center table-flush mb-0">
+              <thead class="thead-light">
+                <tr><th>Projet</th><th>Client</th><th>Budget</th><th>Durée</th><th>Statut</th></tr>
+              </thead>
+              <tbody>
+                @if (loading()) {
+                  <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm text-primary"></span></td></tr>
+                }
+                @for (p of stats()?.derniersProjets ?? []; track p.id) {
+                  <tr>
+                    <td class="fw-semibold text-dark">{{ p.libelle }}</td>
+                    <td>{{ p.nomClient }}</td>
+                    <td>{{ p.budget | currency: 'TND' : 'symbol' : '1.0-0' }}</td>
+                    <td>{{ p.duree | number }} mois</td>
+                    <td>
+                      <span class="badge-dot"><i class="bg-{{ statutInfo(p.statut).color }}"></i>{{ statutInfo(p.statut).label }}</span>
+                    </td>
+                  </tr>
+                } @empty {
+                  @if (!loading()) {
+                    <tr><td colspan="5" class="text-center text-muted py-4">Aucun projet pour le moment.</td></tr>
+                  }
+                }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+      @case ('raccourcis') {
+        <!-- Raccourcis -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-6">
+            <a routerLink="/clients" class="card shortcut">
+              <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-shape bg-gradient-primary text-white"><i class="fas fa-plus"></i></div>
+                <div><div class="fw-semibold text-dark">Ajouter un client</div><small class="text-muted">Enregistrer une nouvelle entreprise</small></div>
+              </div>
+            </a>
+          </div>
+          <div class="col-md-6">
+            <a routerLink="/projets" class="card shortcut">
+              <div class="card-body d-flex align-items-center gap-3">
+                <div class="icon-shape bg-gradient-orange text-white"><i class="fas fa-rocket"></i></div>
+                <div><div class="fw-semibold text-dark">Lancer un projet</div><small class="text-muted">Associer un nouveau projet à un client</small></div>
+              </div>
+            </a>
+          </div>
+        </div>
+      }
     }
   </div>
-</div>
-
-<!-- Graphiques -->
-<div class="row g-4 mb-4">
-  <div class="col-xl-8">
-    <div class="card bg-gradient-default h-100">
-      <div class="card-header bg-transparent border-0">
-        <h6 class="text-uppercase text-light ls-1 mb-1 small">Vue d'ensemble</h6>
-        <h5 class="text-white mb-0">Top 5 clients par budget</h5>
-      </div>
-      <div class="card-body">
-        <div class="chart-box"><canvas #budgetCanvas></canvas></div>
-      </div>
+} @empty {
+  <div class="card mb-4">
+    <div class="card-body text-center text-muted py-5">
+      <i class="fas fa-eye-slash fa-2x mb-2 d-block opacity-50"></i>
+      Tous les blocs sont masqués.
+      <button type="button" class="btn btn-link p-0 ms-1" (click)="ouvrirPersonnalisation()">Personnaliser le tableau de bord</button>
     </div>
   </div>
-  <div class="col-xl-4">
-    <div class="card h-100">
-      <div class="card-header bg-transparent">
-        <h6 class="text-uppercase text-muted ls-1 mb-1 small">Avancement</h6>
-        <h5 class="mb-0">Projets par statut</h5>
-      </div>
-      <div class="card-body">
-        <div class="chart-box"><canvas #statutCanvas></canvas></div>
-      </div>
-    </div>
-  </div>
-</div>
+}
 
-<!-- Derniers projets -->
-<div class="card mb-4">
-  <div class="card-header d-flex align-items-center">
-    <h5 class="mb-0">Derniers projets</h5>
-    <a routerLink="/projets" class="btn btn-sm btn-primary ms-auto">Tout voir</a>
-  </div>
-  <div class="table-responsive">
-    <table class="table align-items-center table-flush mb-0">
-      <thead class="thead-light">
-        <tr><th>Projet</th><th>Client</th><th>Budget</th><th>Durée</th><th>Statut</th></tr>
-      </thead>
-      <tbody>
-        @if (loading()) {
-          <tr><td colspan="5" class="text-center py-4"><span class="spinner-border spinner-border-sm text-primary"></span></td></tr>
-        }
-        @for (p of stats()?.derniersProjets ?? []; track p.id) {
-          <tr>
-            <td class="fw-semibold text-dark">{{ p.libelle }}</td>
-            <td>{{ p.nomClient }}</td>
-            <td>{{ p.budget | currency: 'TND' : 'symbol' : '1.0-0' }}</td>
-            <td>{{ p.duree | number }} mois</td>
-            <td>
-              <span class="badge-dot"><i class="bg-{{ statutInfo(p.statut).color }}"></i>{{ statutInfo(p.statut).label }}</span>
-            </td>
-          </tr>
-        } @empty {
-          @if (!loading()) {
-            <tr><td colspan="5" class="text-center text-muted py-4">Aucun projet pour le moment.</td></tr>
+<!-- ===== Fenêtre de personnalisation ===== -->
+@if (personnalisation()) {
+  <div class="psm-modal-backdrop" (click)="personnalisation.set(false)">
+    <div class="psm-modal psm-modal-sm" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div class="psm-modal-header">
+        <h5 class="mb-0"><i class="fas fa-sliders me-2 text-primary"></i>Personnaliser le tableau de bord</h5>
+        <button type="button" class="btn-close" (click)="personnalisation.set(false)" aria-label="Fermer"></button>
+      </div>
+      <div class="psm-modal-body">
+        <p class="small text-muted">Glissez les blocs pour changer leur ordre, et activez ou masquez ceux que vous voulez voir.
+          Vos choix sont enregistrés sur votre compte.</p>
+        <div class="widgets-list" cdkDropList (cdkDropListDropped)="deplacerBloc($event)">
+          @for (w of brouillon(); track w.id; let i = $index) {
+            <div class="widget-option" cdkDrag [class.masque]="!w.visible">
+              <i class="fas fa-grip-vertical widget-handle"></i>
+              <i class="fas {{ infoBloc(w.id).icon }} text-primary"></i>
+              <div class="min-w-0">
+                <div class="fw-semibold text-dark">{{ infoBloc(w.id).label }}</div>
+                <small class="text-muted">{{ infoBloc(w.id).description }}</small>
+              </div>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" role="switch" [checked]="w.visible" (change)="basculerBloc(i)"
+                       [attr.aria-label]="'Afficher ' + infoBloc(w.id).label" (mousedown)="$event.stopPropagation()">
+              </div>
+            </div>
           }
-        }
-      </tbody>
-    </table>
-  </div>
-</div>
-
-<!-- Raccourcis -->
-<div class="row g-4">
-  <div class="col-md-6">
-    <a routerLink="/clients" class="card shortcut">
-      <div class="card-body d-flex align-items-center gap-3">
-        <div class="icon-shape bg-gradient-primary text-white"><i class="fas fa-plus"></i></div>
-        <div><div class="fw-semibold text-dark">Ajouter un client</div><small class="text-muted">Enregistrer une nouvelle entreprise</small></div>
+        </div>
       </div>
-    </a>
-  </div>
-  <div class="col-md-6">
-    <a routerLink="/projets" class="card shortcut">
-      <div class="card-body d-flex align-items-center gap-3">
-        <div class="icon-shape bg-gradient-orange text-white"><i class="fas fa-rocket"></i></div>
-        <div><div class="fw-semibold text-dark">Lancer un projet</div><small class="text-muted">Associer un nouveau projet à un client</small></div>
+      <div class="psm-modal-footer">
+        <button type="button" class="btn btn-light me-auto" (click)="reinitialiserBrouillon()"><i class="fas fa-rotate-left me-1"></i>Par défaut</button>
+        <button type="button" class="btn btn-light" (click)="personnalisation.set(false)">Annuler</button>
+        <button type="button" class="btn btn-primary" (click)="enregistrerPersonnalisation()">Enregistrer</button>
       </div>
-    </a>
+    </div>
   </div>
-</div>
+}

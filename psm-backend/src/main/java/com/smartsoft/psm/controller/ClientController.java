@@ -5,6 +5,7 @@ import com.smartsoft.psm.dto.ClientDto.ClientOption;
 import com.smartsoft.psm.dto.ClientDto.ClientRequest;
 import com.smartsoft.psm.dto.PageResponse;
 import com.smartsoft.psm.service.ClientService;
+import com.smartsoft.psm.service.ExportService;
 import jakarta.validation.Valid;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ContentDisposition;
@@ -44,6 +45,13 @@ public class ClientController {
                                         @RequestParam(defaultValue = "0") int page,
                                         @RequestParam(defaultValue = "10") int size) {
         return clientService.findAll(q, page, size);
+    }
+
+    /** Export Excel ou PDF : /api/clients/export?format=xlsx|pdf&q=... */
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> export(@RequestParam(defaultValue = "xlsx") String format,
+                                         @RequestParam(defaultValue = "") String q) {
+        return ExportResponses.telechargement(clientService.exporter(q, ExportService.Format.parse(format)));
     }
 
     /** Liste courte (id, nom) pour les listes déroulantes */

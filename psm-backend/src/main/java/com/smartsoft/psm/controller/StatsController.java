@@ -1,7 +1,9 @@
 package com.smartsoft.psm.controller;
 
 import com.smartsoft.psm.dto.StatsDto;
+import com.smartsoft.psm.entity.User;
 import com.smartsoft.psm.service.StatsService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,7 +19,7 @@ public class StatsController {
     }
 
     @GetMapping
-    public StatsDto stats() {
-        return statsService.getStats();
+    public StatsDto stats(@AuthenticationPrincipal User current) {
+        return statsService.getStats(current);
     }
 }

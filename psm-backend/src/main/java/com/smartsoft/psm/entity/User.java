@@ -43,6 +43,22 @@ public class User implements UserDetails {
 
     private LocalDateTime dateCreation;
 
+    /** Mot de passe oublié : empreinte SHA-256 du jeton envoyé par email (jamais le jeton en clair) */
+    @Column(length = 64)
+    private String resetTokenHash;
+
+    private LocalDateTime resetTokenExpiration;
+
+    /** Préférences d'affichage (thème, blocs du dashboard), au format JSON */
+    @Column(length = 2000)
+    private String preferences;
+
+    /** Validation de l'inscription en un clic depuis l'email de l'admin (empreinte SHA-256 du jeton) */
+    @Column(length = 64)
+    private String validationTokenHash;
+
+    private LocalDateTime validationTokenExpiration;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -96,4 +112,25 @@ public class User implements UserDetails {
     public void setDateCreation(LocalDateTime dateCreation) { this.dateCreation = dateCreation; }
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
+    public String getResetTokenHash() { return resetTokenHash; }
+    public void setResetTokenHash(String resetTokenHash) { this.resetTokenHash = resetTokenHash; }
+    public LocalDateTime getResetTokenExpiration() { return resetTokenExpiration; }
+    public void setResetTokenExpiration(LocalDateTime resetTokenExpiration) { this.resetTokenExpiration = resetTokenExpiration; }
+
+    public String getPreferences() { return preferences; }
+    public void setPreferences(String preferences) { this.preferences = preferences; }
+    public String getValidationTokenHash() { return validationTokenHash; }
+    public LocalDateTime getValidationTokenExpiration() { return validationTokenExpiration; }
+
+    public void definirJetonValidation(String hash, LocalDateTime expiration) {
+        this.validationTokenHash = hash;
+        this.validationTokenExpiration = expiration;
+    }
+
+    /** Le compte est activé (lien email ou page Utilisateurs) : le lien de validation ne sert plus */
+    public void effacerJetonValidation() {
+        definirJetonValidation(null, null);
+    }
+
+    public String getNomComplet() { return prenom + " " + nom; }
 }

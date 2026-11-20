@@ -4,11 +4,14 @@ import com.smartsoft.psm.dto.ClientDto;
 import com.smartsoft.psm.dto.ClientDto.ClientOption;
 import com.smartsoft.psm.dto.ClientDto.ClientRequest;
 import com.smartsoft.psm.dto.PageResponse;
+import com.smartsoft.psm.entity.Activite.Action;
+import com.smartsoft.psm.entity.Activite.Cible;
 import com.smartsoft.psm.entity.Client;
 import com.smartsoft.psm.exception.ApiException;
 import com.smartsoft.psm.repository.ClientRepository;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,14 +26,27 @@ public class ClientService {
     private final ClientRepository clientRepository;
     private final FichierService fichierService;
     private final EmailService emailService;
+    private final ActiviteService activiteService;
+    private final ExportService exportService;
 
     /** Fichier prêt à être téléchargé */
     public record FichierClient(Resource resource, String nom, String type) {}
 
-    public ClientService(ClientRepository clientRepository, FichierService fichierService, EmailService emailService) {
+    public ClientService(ClientRepository clientRepository, FichierService fichierService, EmailService emailService,
+                         ActiviteService activiteService, ExportService exportService) {
         this.clientRepository = clientRepository;
         this.fichierService = fichierService;
         this.emailService = emailService;
+        this.activiteService = activiteService;
+        this.exportService = exportService;
+    }
+
+    /** Export Excel / PDF des clients correspondant à la recherche (dans la transaction : projets chargés) */
+    @Transactional(readOnly = true)
+    public ExportService.Fichier exporter(String q, ExportService.Format format) {
+        List<Client> clients = clientRepository.search(q == null ? "" : q.trim(),
+                Pageable.unpaged(Sort.by("nom").ascending())).getContent();
+        return exportService.exporterClients(clients, format);
     }
 
     @Transactional(readOnly = true)
@@ -55,19 +71,24 @@ public class ClientService {
         apply(c, req);
         ClientDto dto = ClientDto.from(clientRepository.save(c));
         emailService.notifierAdminNouveauClient(dto, creePar);
+        activiteService.enregistrer(Action.CREATION, Cible.CLIENT, dto.id(), "Client « " + dto.nom() + " »");
         return dto;
     }
 
     public ClientDto update(Long id, ClientRequest req) {
         Client c = getEntity(id);
         apply(c, req);
+        activiteService.enregistrer(Action.MODIFICATION, Cible.CLIENT, id, "Client « " + c.getNom() + " »");
         return ClientDto.from(c);
     }
 
     public void delete(Long id) {
         Client c = getEntity(id);
+        int nbProjets = c.getProjets().size();
         clientRepository.delete(c); // supprime aussi ses projets (cascade)
         fichierService.supprimer(c.getFichierStocke());
+        activiteService.enregistrer(Action.SUPPRESSION, Cible.CLIENT, id,
+                "Client « " + c.getNom() + " »" + (nbProjets > 0 ? " et ses " + nbProjets + " projet(s)" : ""));
     }
 
     // ---------- Fichier joint (upload / download) ----------
@@ -81,6 +102,8 @@ public class ClientService {
         c.setFichierNom(nomOrigine.length() > 255 ? nomOrigine.substring(nomOrigine.length() - 255) : nomOrigine);
         c.setFichierType(fichierService.typeMime(nomOrigine));
         fichierService.supprimer(ancien);
+        activiteService.enregistrer(Action.MODIFICATION, Cible.CLIENT, id,
+                "Fichier joint « " + c.getFichierNom() + " » ajouté au client « " + c.getNom() + " »");
         return ClientDto.from(c);
     }
 
@@ -95,6 +118,8 @@ public class ClientService {
         Client c = getEntity(id);
         if (c.getFichierStocke() == null) throw ApiException.notFound("Ce client n'a pas de fichier joint");
         fichierService.supprimer(c.getFichierStocke());
+        activiteService.enregistrer(Action.SUPPRESSION, Cible.CLIENT, id,
+                "Fichier joint « " + c.getFichierNom() + " » du client « " + c.getNom() + " »");
         c.setFichierStocke(null);
         c.setFichierNom(null);
         c.setFichierType(null);

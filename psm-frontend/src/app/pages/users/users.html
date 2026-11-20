@@ -16,6 +16,9 @@
         <span class="input-group-text"><i class="fas fa-magnifying-glass"></i></span>
         <input class="form-control" placeholder="Nom ou email…" (input)="onSearch($any($event.target).value)">
       </div>
+      <button class="btn btn-primary" type="button" (click)="openCreate()">
+        <i class="fas fa-user-plus me-1"></i> Nouvel utilisateur
+      </button>
     </div>
   </div>
 
@@ -127,6 +130,78 @@
         <button type="button" class="btn btn-light" (click)="rolesUser.set(null)">Annuler</button>
         <button type="button" class="btn btn-primary" [disabled]="rolesSelection().length === 0" (click)="saveRoles()">Enregistrer</button>
       </div>
+    </div>
+  </div>
+}
+
+<!-- ===== Modal création d'un utilisateur (POST /api/users) ===== -->
+@if (createOpen()) {
+  <div class="psm-modal-backdrop" (click)="createOpen.set(false)">
+    <div class="psm-modal" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <div class="psm-modal-header">
+        <h5 class="mb-0"><i class="fas fa-user-plus me-2 text-primary"></i>Nouvel utilisateur</h5>
+        <button type="button" class="btn-close" (click)="createOpen.set(false)" aria-label="Fermer"></button>
+      </div>
+      <form [formGroup]="createForm" (ngSubmit)="create()" novalidate>
+        <div class="psm-modal-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Prénom *</label>
+              <input class="form-control" formControlName="prenom" [class.is-invalid]="createInvalid('prenom')" placeholder="Ex. Soulaima">
+              <div class="invalid-feedback">Le prénom est obligatoire.</div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Nom *</label>
+              <input class="form-control" formControlName="nom" [class.is-invalid]="createInvalid('nom')" placeholder="Ex. Sellemi">
+              <div class="invalid-feedback">Le nom est obligatoire.</div>
+            </div>
+            <div class="col-md-7">
+              <label class="form-label">Email *</label>
+              <input class="form-control" type="email" formControlName="email" [class.is-invalid]="createInvalid('email')" placeholder="prenom.nom@smartsoft.tn" autocomplete="off">
+              <div class="invalid-feedback">Email obligatoire et valide.</div>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label">Téléphone</label>
+              <input class="form-control" formControlName="tel" [class.is-invalid]="createInvalid('tel')" placeholder="+216 20 000 000">
+            </div>
+            <div class="col-12">
+              <label class="form-label">Mot de passe provisoire *</label>
+              <div class="input-group" [class.has-validation]="createInvalid('password')">
+                <input class="form-control" [type]="showPassword() ? 'text' : 'password'" formControlName="password"
+                       [class.is-invalid]="createInvalid('password')" autocomplete="new-password" placeholder="8 caractères minimum">
+                <button class="btn btn-light" type="button" (click)="showPassword.set(!showPassword())"
+                        [title]="showPassword() ? 'Masquer' : 'Afficher'">
+                  <i class="fas" [class.fa-eye]="!showPassword()" [class.fa-eye-slash]="showPassword()"></i>
+                </button>
+                <div class="invalid-feedback">Au moins 8 caractères.</div>
+              </div>
+              <small class="text-muted">Communiquez-le à la personne : elle pourra le changer depuis « Mon profil ».</small>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Rôles *</label>
+              @for (r of allRoles; track r) {
+                <label class="role-option" [class.selected]="createRoles().includes(r)">
+                  <input type="checkbox" class="form-check-input me-3" [checked]="createRoles().includes(r)" (change)="toggleCreateRole(r)">
+                  <span>
+                    <strong>{{ r === 'ADMIN' ? 'Administrateur' : 'Collaborateur' }}</strong><br>
+                    <small class="text-muted">{{ r === 'ADMIN' ? 'CRUD complet + gestion des utilisateurs' : 'Consulter et ajouter clients / projets' }}</small>
+                  </span>
+                </label>
+              }
+              @if (createSubmitted() && createRoles().length === 0) {
+                <small class="text-danger">Sélectionnez au moins un rôle.</small>
+              }
+            </div>
+          </div>
+        </div>
+        <div class="psm-modal-footer">
+          <button type="button" class="btn btn-light" (click)="createOpen.set(false)">Annuler</button>
+          <button type="submit" class="btn btn-primary" [disabled]="creating()">
+            @if (creating()) { <span class="spinner-border spinner-border-sm me-2"></span> }
+            Créer le compte
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 }
